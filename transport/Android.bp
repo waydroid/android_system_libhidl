@@ -42,6 +42,7 @@ cc_library_shared {
         "libhidlbase",
         "libhwbinder",
         "libcutils",
+        "libvndksupport",
     ],
     export_shared_lib_headers: [
         "libbase",
