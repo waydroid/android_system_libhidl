@@ -306,42 +306,25 @@ static status_t writeReferenceToParcel(
 // Otherwise, the smallest possible BnChild is found where IChild is a subclass of IType
 // and iface is of class IChild. BnChild will be used to wrapped the given iface.
 // Return nullptr if iface is null or any failure.
-template <typename IType>
+template <typename IType, typename ProxyType>
 sp<IBinder> toBinder(sp<IType> iface) {
     IType *ifacePtr = iface.get();
     if (ifacePtr == nullptr) {
         return nullptr;
     }
     if (ifacePtr->isRemote()) {
-        return ::android::hardware::IInterface::asBinder(
-            static_cast<BpInterface<IType>*>(ifacePtr));
+        return ::android::hardware::IInterface::asBinder(static_cast<ProxyType *>(ifacePtr));
     } else {
         std::string myDescriptor = details::getDescriptor(ifacePtr);
         if (myDescriptor.empty()) {
             // interfaceDescriptor fails
             return nullptr;
         }
-
-        // for get + set
-        std::unique_lock<std::mutex> _lock = details::gBnMap.lock();
-
-        wp<BHwBinder> wBnObj = details::gBnMap.getLocked(ifacePtr, nullptr);
-        sp<IBinder> sBnObj = wBnObj.promote();
-
-        if (sBnObj == nullptr) {
-            auto func = details::gBnConstructorMap.get(myDescriptor, nullptr);
-            if (!func) {
-                return nullptr;
-            }
-
-            sBnObj = sp<IBinder>(func(static_cast<void*>(ifacePtr)));
-
-            if (sBnObj != nullptr) {
-                details::gBnMap.setLocked(ifacePtr, static_cast<BHwBinder*>(sBnObj.get()));
-            }
+        auto func = details::gBnConstructorMap.get(myDescriptor, nullptr);
+        if (!func) {
+            return nullptr;
         }
-
-        return sBnObj;
+        return sp<IBinder>(func(static_cast<void *>(ifacePtr)));
     }
 }
 

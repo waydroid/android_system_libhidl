@@ -32,9 +32,6 @@ sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
 ConcurrentMap<std::string, std::function<sp<IBinder>(void *)>>
         gBnConstructorMap{};
 
-ConcurrentMap<const ::android::hidl::base::V1_0::IBase*, wp<::android::hardware::BHwBinder>>
-    gBnMap{};
-
 ConcurrentMap<wp<::android::hidl::base::V1_0::IBase>, SchedPrio> gServicePrioMap{};
 
 ConcurrentMap<std::string, std::function<sp<::android::hidl::base::V1_0::IBase>(void *)>>
