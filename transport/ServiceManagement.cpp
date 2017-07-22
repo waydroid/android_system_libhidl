@@ -36,9 +36,9 @@
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
 
-#include <android/hidl/manager/1.0/IServiceManager.h>
-#include <android/hidl/manager/1.0/BpHwServiceManager.h>
-#include <android/hidl/manager/1.0/BnHwServiceManager.h>
+#include <android/hidl/manager/1.1/IServiceManager.h>
+#include <android/hidl/manager/1.1/BpHwServiceManager.h>
+#include <android/hidl/manager/1.1/BnHwServiceManager.h>
 
 #define RE_COMPONENT    "[a-zA-Z_][a-zA-Z_0-9]*"
 #define RE_PATH         RE_COMPONENT "(?:[.]" RE_COMPONENT ")*"
@@ -46,17 +46,18 @@ static const std::regex gLibraryFileNamePattern("(" RE_PATH "@[0-9]+[.][0-9]+)-i
 
 using android::base::WaitForProperty;
 
-using android::hidl::manager::V1_0::IServiceManager;
+using IServiceManager1_0 = android::hidl::manager::V1_0::IServiceManager;
+using IServiceManager1_1 = android::hidl::manager::V1_1::IServiceManager;
 using android::hidl::manager::V1_0::IServiceNotification;
-using android::hidl::manager::V1_0::BpHwServiceManager;
-using android::hidl::manager::V1_0::BnHwServiceManager;
+using android::hidl::manager::V1_1::BpHwServiceManager;
+using android::hidl::manager::V1_1::BnHwServiceManager;
 
 namespace android {
 namespace hardware {
 
 namespace details {
 extern Mutex gDefaultServiceManagerLock;
-extern sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
+extern sp<android::hidl::manager::V1_1::IServiceManager> gDefaultServiceManager;
 }  // namespace details
 
 static const char* kHwServicemanagerReadyProperty = "hwservicemanager.ready";
@@ -130,7 +131,10 @@ void onRegistration(const std::string &packageName,
 
 }  // details
 
-sp<IServiceManager> defaultServiceManager() {
+sp<IServiceManager1_0> defaultServiceManager() {
+    return defaultServiceManager1_1();
+}
+sp<IServiceManager1_1> defaultServiceManager1_1() {
     {
         AutoMutex _l(details::gDefaultServiceManagerLock);
         if (details::gDefaultServiceManager != NULL) {
@@ -147,7 +151,7 @@ sp<IServiceManager> defaultServiceManager() {
 
         while (details::gDefaultServiceManager == NULL) {
             details::gDefaultServiceManager =
-                    fromBinder<IServiceManager, BpHwServiceManager, BnHwServiceManager>(
+                    fromBinder<IServiceManager1_1, BpHwServiceManager, BnHwServiceManager>(
                         ProcessState::self()->getContextObject(NULL));
             if (details::gDefaultServiceManager == NULL) {
                 LOG(ERROR) << "Waited for hwservicemanager, but got nullptr.";
@@ -191,7 +195,7 @@ bool matchPackageName(const std::string& lib, std::string* matchedName, std::str
 }
 
 static void registerReference(const hidl_string &interfaceName, const hidl_string &instanceName) {
-    sp<IServiceManager> binderizedManager = defaultServiceManager();
+    sp<IServiceManager1_0> binderizedManager = defaultServiceManager();
     if (binderizedManager == nullptr) {
         LOG(WARNING) << "Could not registerReference for "
                      << interfaceName << "/" << instanceName
@@ -247,7 +251,7 @@ static inline void fetchPidsForPassthroughLibraries(
     }
 }
 
-struct PassthroughServiceManager : IServiceManager {
+struct PassthroughServiceManager : IServiceManager1_1 {
     static void openLibs(const std::string& fqName,
             std::function<bool /* continue */(void* /* handle */,
                 const std::string& /* lib */, const std::string& /* sym */)> eachLib) {
@@ -415,9 +419,20 @@ struct PassthroughServiceManager : IServiceManager {
         return Void();
     }
 
+    Return<bool> unregisterForNotifications(const hidl_string& /* fqName */,
+                                            const hidl_string& /* name */,
+                                            const sp<IServiceNotification>& /* callback */) override {
+        // This makes no sense.
+        LOG(FATAL) << "Cannot unregister for notifications with passthrough service manager.";
+        return false;
+    }
+
 };
 
-sp<IServiceManager> getPassthroughServiceManager() {
+sp<IServiceManager1_0> getPassthroughServiceManager() {
+    return getPassthroughServiceManager1_1();
+}
+sp<IServiceManager1_1> getPassthroughServiceManager1_1() {
     static sp<PassthroughServiceManager> manager(new PassthroughServiceManager());
     return manager;
 }
@@ -474,7 +489,7 @@ private:
 
 void waitForHwService(
         const std::string &interface, const std::string &instanceName) {
-    const sp<IServiceManager> manager = defaultServiceManager();
+    const sp<IServiceManager1_1> manager = defaultServiceManager1_1();
 
     if (manager == nullptr) {
         LOG(ERROR) << "Could not get default service manager.";
@@ -498,6 +513,11 @@ void waitForHwService(
     }
 
     waiter->wait(interface, instanceName);
+
+    if (!manager->unregisterForNotifications(interface, instanceName, waiter).withDefault(false)) {
+        LOG(ERROR) << "Could not unregister service notification for "
+            << interface << "/" << instanceName << ".";
+    }
 }
 
 }; // namespace details
