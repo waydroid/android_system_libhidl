@@ -37,7 +37,7 @@ struct bnhw_tag {};
 // tag for proxy interfaces (e.x. BpHwFoo)
 struct bphw_tag {};
 
-// tag for server interfaces (e.x. BsFoo)
+// tag for passthrough interfaces (e.x. BsFoo)
 struct bs_tag {};
 
 //Templated classes can use the below method
