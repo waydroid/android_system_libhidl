@@ -172,15 +172,16 @@ private:
     void moveFrom(hidl_string &&);
 };
 
+// Use NOLINT to suppress missing parentheses warnings around OP.
 #define HIDL_STRING_OPERATOR(OP)                                               \
     inline bool operator OP(const hidl_string &hs1, const hidl_string &hs2) {  \
-        return strcmp(hs1.c_str(), hs2.c_str()) OP 0;                          \
+        return strcmp(hs1.c_str(), hs2.c_str()) OP 0;     /* NOLINT */         \
     }                                                                          \
     inline bool operator OP(const hidl_string &hs, const char *s) {            \
-        return strcmp(hs.c_str(), s) OP 0;                                     \
+        return strcmp(hs.c_str(), s) OP 0;                /* NOLINT */         \
     }                                                                          \
     inline bool operator OP(const char *s, const hidl_string &hs) {            \
-        return strcmp(hs.c_str(), s) OP 0;                                     \
+        return strcmp(hs.c_str(), s) OP 0;                /* NOLINT */         \
     }
 
 HIDL_STRING_OPERATOR(==)
