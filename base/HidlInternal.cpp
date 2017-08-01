@@ -25,13 +25,16 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <regex>
+#include <utils/misc.h>
+
+extern "C" __attribute__((weak)) void __sanitizer_cov_dump();
 #endif
 
 namespace android {
 namespace hardware {
 namespace details {
 
-void logAlwaysFatal(const char *message) {
+void logAlwaysFatal(const char* message) {
     LOG(FATAL) << message;
 }
 
@@ -42,9 +45,21 @@ HidlInstrumentor::HidlInstrumentor(
         const std::string &interface)
         : mInstrumentationLibPackage(package), mInterfaceName(interface) {
     configureInstrumentation(false);
+#ifdef LIBHIDL_TARGET_DEBUGGABLE
+    if (__sanitizer_cov_dump != nullptr) {
+        ::android::add_sysprop_change_callback(
+            []() {
+                bool enableCoverage = property_get_bool("hal.coverage.enable", false);
+                if (enableCoverage) {
+                    __sanitizer_cov_dump();
+                }
+            },
+            0);
+    }
+#endif
 }
 
-HidlInstrumentor:: ~HidlInstrumentor() {}
+HidlInstrumentor::~HidlInstrumentor() {}
 
 void HidlInstrumentor::configureInstrumentation(bool log) {
     bool enable_instrumentation = property_get_bool(
