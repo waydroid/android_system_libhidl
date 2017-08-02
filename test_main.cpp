@@ -17,6 +17,7 @@
 #define LOG_TAG "LibHidlTest"
 
 #include <android-base/logging.h>
+#include <condition_variable>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hidl/HidlSupport.h>
@@ -296,16 +297,23 @@ TEST_F(LibHidlTest, ArrayTest) {
 
 TEST_F(LibHidlTest, TaskRunnerTest) {
     using android::hardware::details::TaskRunner;
+    using namespace std::chrono_literals;
+
+    std::condition_variable cv;
+    std::mutex m;
+
     TaskRunner tr;
     tr.start(1 /* limit */);
     bool flag = false;
     tr.push([&] {
-        usleep(1000);
         flag = true;
+        cv.notify_all();
     });
-    usleep(500);
-    EXPECT_FALSE(flag);
-    usleep(1000);
+
+    std::unique_lock<std::mutex> lock(m);
+
+    // 1s so this doesn't deadlock. This isn't a performance test.
+    EXPECT_TRUE(cv.wait_for(lock, 1s, [&]{return flag;}));
     EXPECT_TRUE(flag);
 }
 
