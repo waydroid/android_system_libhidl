@@ -28,6 +28,18 @@ namespace android {
 namespace hardware {
 namespace details {
 
+// tag for pure interfaces (e.x. IFoo)
+struct i_tag {};
+
+// tag for server interfaces (e.x. BnHwFoo)
+struct bnhw_tag {};
+
+// tag for proxy interfaces (e.x. BpHwFoo)
+struct bphw_tag {};
+
+// tag for passthrough interfaces (e.x. BsFoo)
+struct bs_tag {};
+
 //Templated classes can use the below method
 //to avoid creating dependencies on liblog.
 void logAlwaysFatal(const char *message);
