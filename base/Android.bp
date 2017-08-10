@@ -19,7 +19,7 @@ cc_library_shared {
         enabled: true,
         support_system_process: true,
     },
-    cflags: libhidl_flags,
+    defaults: ["libhidl-defaults"],
     shared_libs: [
         "libbase",
         "libcutils",
