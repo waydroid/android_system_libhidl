@@ -31,8 +31,10 @@ cc_library_shared {
         enabled: true,
         support_system_process: true,
     },
-    defaults: ["hidl-module-defaults"],
-    cflags: libhidl_flags,
+    defaults: [
+        "libhidl-defaults",
+        "hidl-module-defaults",
+    ],
     shared_libs: [
         "libbase",
         "liblog",
