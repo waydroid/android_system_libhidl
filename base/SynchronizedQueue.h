@@ -45,11 +45,23 @@ struct SynchronizedQueue {
      */
     size_t size();
 
+    std::unique_lock<std::mutex> lock() {
+        return std::unique_lock<std::mutex>(mMutex);
+    }
+
+    bool isInitializedLocked() {
+        return mInitialized;
+    }
+    void setInitializedLocked(bool isInitialized) {
+        mInitialized = isInitialized;
+    }
+
 private:
     std::condition_variable mCondition;
     std::mutex mMutex;
     std::queue<T> mQueue;
     const size_t mQueueLimit;
+    bool mInitialized;
 };
 
 template <typename T>
