@@ -39,7 +39,5 @@ cc_library {
     export_include_dirs: [
         "include"
     ],
-
-    clang: true,
 }
 
