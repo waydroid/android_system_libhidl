@@ -76,9 +76,9 @@ TEST_F(LibHidlTest, StringTest) {
     EXPECT_STREQ(s6.c_str(), "s6");
     hidl_string s7 = std::string("s7"); // copy = from std::string
     EXPECT_STREQ(s7.c_str(), "s7");
-    hidl_string s8(s7); // copy constructor
+    hidl_string s8(s7); // copy constructor // NOLINT, test the copy constructor
     EXPECT_STREQ(s8.c_str(), "s7");
-    hidl_string s9 = s8; // copy =
+    hidl_string s9 = s8; // copy =  // NOLINT, test the copy operator
     EXPECT_STREQ(s9.c_str(), "s7");
     char myCString[20] = "myCString";
     s.setToExternal(&myCString[0], strlen(myCString));
@@ -154,14 +154,14 @@ TEST_F(LibHidlTest, MemoryTest) {
     using android::hardware::hidl_memory;
 
     hidl_memory mem1 = hidl_memory(); // default constructor
-    hidl_memory mem2 = mem1; // copy constructor (nullptr)
+    hidl_memory mem2 = mem1; // copy constructor (nullptr), NOLINT
 
     EXPECT_EQ(nullptr, mem2.handle());
 
     native_handle_t* testHandle = native_handle_create(0 /* numInts */, 0 /* numFds */);
 
     hidl_memory mem3 = hidl_memory("foo", testHandle, 42 /* size */); // owns testHandle
-    hidl_memory mem4 = mem3; // copy constructor (regular handle)
+    hidl_memory mem4 = mem3; // copy constructor (regular handle), NOLINT
 
     EXPECT_EQ(mem3.name(), mem4.name());
     EXPECT_EQ(mem3.size(), mem4.size());
@@ -169,7 +169,7 @@ TEST_F(LibHidlTest, MemoryTest) {
     EXPECT_NE(mem3.handle(), mem4.handle()); // check handle cloned
 
     hidl_memory mem5 = hidl_memory("foo", nullptr, 0); // hidl memory works with nullptr handle
-    hidl_memory mem6 = mem5;
+    hidl_memory mem6 = mem5; // NOLINT, test copying
     EXPECT_EQ(nullptr, mem5.handle());
     EXPECT_EQ(nullptr, mem6.handle());
 }
