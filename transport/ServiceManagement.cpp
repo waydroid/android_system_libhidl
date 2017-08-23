@@ -90,7 +90,7 @@ std::string binaryName() {
     }
     ifs >> cmdline;
 
-    size_t idx = cmdline.rfind("/");
+    size_t idx = cmdline.rfind('/');
     if (idx != std::string::npos) {
         cmdline = cmdline.substr(idx + 1);
     }
@@ -254,9 +254,10 @@ static inline void fetchPidsForPassthroughLibraries(
 }
 
 struct PassthroughServiceManager : IServiceManager1_1 {
-    static void openLibs(const std::string& fqName,
-            std::function<bool /* continue */(void* /* handle */,
-                const std::string& /* lib */, const std::string& /* sym */)> eachLib) {
+    static void openLibs(
+        const std::string& fqName,
+        const std::function<bool /* continue */ (void* /* handle */, const std::string& /* lib */,
+                                                 const std::string& /* sym */)>& eachLib) {
         //fqName looks like android.hardware.foo@1.0::IFoo
         size_t idx = fqName.find("::");
 
