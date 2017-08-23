@@ -143,7 +143,7 @@ namespace details {
         void assertOk() const;
     public:
         return_status() {}
-        return_status(Status s) : mStatus(s) {}
+        return_status(const Status& s) : mStatus(s) {}
 
         return_status(const return_status &) = delete;
         return_status &operator=(const return_status &) = delete;
@@ -240,7 +240,7 @@ public:
 template<> class Return<void> : public details::return_status {
 public:
     Return() : details::return_status() {}
-    Return(Status s) : details::return_status(s) {}
+    Return(const Status& s) : details::return_status(s) {}
 
     // move-able.
     // precondition: "this" has checked status

@@ -97,7 +97,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
         instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_ODM);
     }
 
-    for (auto path : instrumentationLibPaths) {
+    for (const auto& path : instrumentationLibPaths) {
         DIR *dir = opendir(path.c_str());
         if (dir == 0) {
             LOG(WARNING) << path << " does not exist. ";
