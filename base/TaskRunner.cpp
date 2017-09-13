@@ -16,6 +16,7 @@
 
 #include <hidl/TaskRunner.h>
 
+#include <utils/AndroidThreads.h>
 #include "SynchronizedQueue.h"
 
 #include <thread>
@@ -49,6 +50,8 @@ bool TaskRunner::push(const Task &t) {
             // Allow the thread to continue running in background;
             // TaskRunner do not care about the std::thread object.
             std::thread{[q = mQueue] {
+                androidSetThreadName("HIDL TaskRunner");
+
                 Task nextTask;
                 while (!!(nextTask = q->wait_pop())) {
                     nextTask();
