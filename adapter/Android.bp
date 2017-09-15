@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Android Open Source Project
+// Copyright (C) 2017 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,40 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-subdirs = [
-    "adapter",
-    "base",           // libhidlbase
-    "libhidlmemory",  // libhidlmemory
-    "transport",      // libhidltransport
-]
-
-cc_defaults {
-    name: "libhidl-defaults",
-    cflags: [
-        "-Wall",
-        "-Werror",
+cc_library_shared {
+    name: "libhidladapter",
+    srcs: [
+        "HidlBinderAdapter.cpp"
     ],
-}
-
-cc_test {
-    name: "libhidl_test",
-    defaults: ["libhidl-defaults"],
-    gtest: false,
-    srcs: ["test_main.cpp"],
-
+    export_include_dirs: ["include"],
     shared_libs: [
-        "libbase",
         "libhidlbase",
         "libhidltransport",
         "libhwbinder",
-        "liblog",
         "libutils",
-        "libcutils",
     ],
-    static_libs: ["libgtest", "libgmock"],
-
-    cflags: [
-        "-O0",
-        "-g",
+    export_shared_lib_headers: [
+        "libhidlbase",
+        "libhidltransport",
+        "libutils",
     ],
 }
+
