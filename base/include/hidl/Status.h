@@ -155,6 +155,11 @@ namespace details {
 
         ~return_status();
 
+        bool isOkUnchecked() const {
+            // someone else will have to check
+            return mStatus.isOk();
+        }
+
         bool isOk() const {
             mCheckedStatus = true;
             return mStatus.isOk();
