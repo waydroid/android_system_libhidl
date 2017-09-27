@@ -109,6 +109,10 @@ sp<IBase> adaptWithDefault(const sp<IBase>& something,
                            const std::function<sp<IBase>()>& makeDefault) {
     static std::map<sp<IBase>, sp<IBase>> sAdapterMap;
 
+    if (something == nullptr) {
+        return something;
+    }
+
     auto it = sAdapterMap.find(something);
     if (it == sAdapterMap.end()) {
         it = sAdapterMap.insert(it, {something, makeDefault()});
