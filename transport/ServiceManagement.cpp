@@ -139,7 +139,7 @@ sp<IServiceManager1_0> defaultServiceManager() {
 sp<IServiceManager1_1> defaultServiceManager1_1() {
     {
         AutoMutex _l(details::gDefaultServiceManagerLock);
-        if (details::gDefaultServiceManager != NULL) {
+        if (details::gDefaultServiceManager != nullptr) {
             return details::gDefaultServiceManager;
         }
 
@@ -151,11 +151,11 @@ sp<IServiceManager1_1> defaultServiceManager1_1() {
 
         waitForHwServiceManager();
 
-        while (details::gDefaultServiceManager == NULL) {
+        while (details::gDefaultServiceManager == nullptr) {
             details::gDefaultServiceManager =
                     fromBinder<IServiceManager1_1, BpHwServiceManager, BnHwServiceManager>(
-                        ProcessState::self()->getContextObject(NULL));
-            if (details::gDefaultServiceManager == NULL) {
+                        ProcessState::self()->getContextObject(nullptr));
+            if (details::gDefaultServiceManager == nullptr) {
                 LOG(ERROR) << "Waited for hwservicemanager, but got nullptr.";
                 sleep(1);
             }
@@ -225,7 +225,7 @@ static inline void fetchPidsForPassthroughLibraries(
     if (!dir) return;
     dirent* dp;
     while ((dp = readdir(dir.get())) != nullptr) {
-        pid_t pid = strtoll(dp->d_name, NULL, 0);
+        pid_t pid = strtoll(dp->d_name, nullptr, 0);
         if (pid == 0) continue;
         std::string mapsPath = proc + dp->d_name + "/maps";
         std::ifstream ifs{mapsPath};

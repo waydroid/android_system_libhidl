@@ -284,7 +284,7 @@ private:
 template<typename T>
 struct hidl_vec {
     hidl_vec()
-        : mBuffer(NULL),
+        : mBuffer(nullptr),
           mSize(0),
           mOwnsBuffer(true) {
         static_assert(hidl_vec<T>::kOffsetOfBuffer == 0, "wrong offset");
@@ -342,7 +342,7 @@ struct hidl_vec {
         if (mOwnsBuffer) {
             delete[] mBuffer;
         }
-        mBuffer = NULL;
+        mBuffer = nullptr;
     }
 
     // Reference an existing array, optionally taking ownership. It is the
@@ -531,7 +531,7 @@ private:
                 mBuffer[i] = data[i];
             }
         } else {
-            mBuffer = NULL;
+            mBuffer = nullptr;
         }
     }
 };
