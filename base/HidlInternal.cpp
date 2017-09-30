@@ -105,7 +105,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
         }
 
         struct dirent *file;
-        while ((file = readdir(dir)) != NULL) {
+        while ((file = readdir(dir)) != nullptr) {
             if (!isInstrumentationLib(file))
                 continue;
 
@@ -141,7 +141,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
             }
             auto cb = (cbFun)dlsym(handle, ("HIDL_INSTRUMENTATION_FUNCTION_"
                         + package + "_" + mInterfaceName).c_str());
-            if ((error = dlerror()) != NULL) {
+            if ((error = dlerror()) != nullptr) {
                 LOG(WARNING)
                     << "couldn't find symbol: HIDL_INSTRUMENTATION_FUNCTION_"
                     << package << "_" << mInterfaceName << ", error: " << error;
