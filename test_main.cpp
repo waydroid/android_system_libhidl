@@ -177,8 +177,13 @@ TEST_F(LibHidlTest, MemoryTest) {
 TEST_F(LibHidlTest, VecInitTest) {
     using android::hardware::hidl_vec;
     using std::vector;
+    int32_t empty[3] = {0};
     int32_t array[] = {5, 6, 7};
     vector<int32_t> v(array, array + 3);
+
+    hidl_vec<int32_t> hv0(3);  // size
+    EXPECT_EQ(hv0.size(), 3ul);
+    EXPECT_ARRAYEQ(hv0, empty, 3);
 
     hidl_vec<int32_t> hv1 = v; // copy =
     EXPECT_ARRAYEQ(hv1, array, 3);
