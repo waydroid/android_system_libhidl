@@ -290,6 +290,8 @@ struct hidl_vec {
         static_assert(hidl_vec<T>::kOffsetOfBuffer == 0, "wrong offset");
     }
 
+    hidl_vec(size_t size) : hidl_vec() { resize(size); }
+
     hidl_vec(const hidl_vec<T> &other) : hidl_vec() {
         *this = other;
     }
