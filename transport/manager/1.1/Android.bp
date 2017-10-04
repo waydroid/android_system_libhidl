@@ -100,6 +100,7 @@ genrule {
 
 cc_test {
     name: "android.hidl.manager@1.1-adapter",
+    defaults: ["hidl-module-defaults"],
     shared_libs: [
         "libhidladapter",
         "libhidlbase",
