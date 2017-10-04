@@ -27,9 +27,11 @@ namespace details {
  * Wrap the given interface with the smallest BsChild possible. Will return the
  * argument directly if nullptr or isRemote().
  */
-template<typename IType>
-sp<::android::hidl::base::V1_0::IBase> wrapPassthrough(
-        sp<IType> iface) {
+template <typename IType,
+          typename = std::enable_if_t<std::is_same<i_tag, typename IType::_hidl_tag>::value>>
+sp<IType> wrapPassthrough(sp<IType> iface) {
+    using ::android::hidl::base::V1_0::IBase;
+
     if (iface.get() == nullptr || iface->isRemote()) {
         // doesn't know how to handle it.
         return iface;
@@ -43,7 +45,13 @@ sp<::android::hidl::base::V1_0::IBase> wrapPassthrough(
     if (!func) {
         return nullptr;
     }
-    return func(static_cast<void *>(iface.get()));
+
+    sp<IBase> base = func(static_cast<void*>(iface.get()));
+
+    // would normally call castFrom, but gBsConstructorMap guarantees
+    // that its result is of the appropriate type (not necessaryly
+    // BsType, but definitely a child of IType).
+    return sp<IType>(static_cast<IType*>(base.get()));
 }
 
 }  // namespace details
