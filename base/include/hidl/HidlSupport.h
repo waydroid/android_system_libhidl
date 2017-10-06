@@ -290,6 +290,7 @@ struct hidl_vec {
         static_assert(hidl_vec<T>::kOffsetOfBuffer == 0, "wrong offset");
     }
 
+    // Note, does not initialize primitive types.
     hidl_vec(size_t size) : hidl_vec() { resize(size); }
 
     hidl_vec(const hidl_vec<T> &other) : hidl_vec() {
@@ -448,6 +449,7 @@ struct hidl_vec {
         return mBuffer[index];
     }
 
+    // Does not initialize primitive types if new size > old size.
     void resize(size_t size) {
         if (size > UINT32_MAX) {
             details::logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
