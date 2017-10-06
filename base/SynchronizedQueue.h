@@ -61,7 +61,7 @@ private:
     std::mutex mMutex;
     std::queue<T> mQueue;
     const size_t mQueueLimit;
-    bool mInitialized;
+    bool mInitialized = false;
 };
 
 template <typename T>
