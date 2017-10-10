@@ -19,6 +19,7 @@
 
 #include <android/hidl/base/1.0/IBase.h>
 #include <hidl/HidlBinderSupport.h>
+#include <hidl/HidlPassthroughSupport.h>
 #include <hidl/HidlSupport.h>
 #include <hidl/HidlTransportUtils.h>
 
@@ -106,8 +107,38 @@ Return<sp<IChild>> castInterface(sp<IParent> parent, const char* childIndicator,
         // binderized mode. Got BpChild. grab the remote and wrap it.
         return sp<IChild>(new BpChild(toBinder<IParent>(parent)));
     }
-    // Passthrough mode. Got BnChild and BsChild.
+    // Passthrough mode. Got BnChild or BsChild.
     return sp<IChild>(static_cast<IChild *>(parent.get()));
+}
+
+// Returns a service with the following constraints:
+// - retry => service is waited for and returned if available in this process
+// - getStub => internal only. Forces to get the unwrapped (no BsFoo) if available.
+// TODO(b/65843592)
+// If the service is a remote service, this function returns BpBase. If the service is
+// a passthrough service, this function returns the appropriately wrapped Bs child object.
+sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& descriptor,
+                                                             const std::string& instance,
+                                                             bool retry, bool getStub);
+
+template <typename BpType, typename IType = typename BpType::Pure,
+          typename = std::enable_if_t<std::is_same<i_tag, typename IType::_hidl_tag>::value>,
+          typename = std::enable_if_t<std::is_same<bphw_tag, typename BpType::_hidl_tag>::value>>
+sp<IType> getServiceInternal(const std::string& instance, bool retry, bool getStub) {
+    using ::android::hidl::base::V1_0::IBase;
+
+    sp<IBase> base = getRawServiceInternal(IType::descriptor, instance, retry, getStub);
+
+    if (base == nullptr) {
+        return nullptr;
+    }
+
+    if (base->isRemote()) {
+        // getRawServiceInternal guarantees we get the proper class
+        return sp<IType>(new BpType(toBinder<IBase>(base)));
+    }
+
+    return IType::castFrom(base);
 }
 
 }  // namespace details

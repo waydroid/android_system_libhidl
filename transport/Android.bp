@@ -80,5 +80,8 @@ cc_library_shared {
         debuggable: {
             cflags: ["-DLIBHIDL_TARGET_DEBUGGABLE"],
         },
+        treble: {
+            cflags: ["-DLIBHIDL_TARGET_TREBLE"]
+        },
     },
 }
