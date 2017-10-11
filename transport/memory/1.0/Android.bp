@@ -69,6 +69,11 @@ cc_library {
     ],
 }
 
+// This package is not java compatible. Not creating java target.
+
+// This package does not export any types. Not creating java constants export.
+
+
 genrule {
     name: "android.hidl.memory@1.0-adapter-helper_genc++",
     tools: ["hidl-gen"],
@@ -94,7 +99,6 @@ genrule {
         "android/hidl/memory/1.0/AMemory.h",
     ],
 }
-
 
 cc_library {
     name: "android.hidl.memory@1.0-adapter-helper",
