@@ -45,6 +45,33 @@ genrule {
 // android.hidl.manager@1.0 is exported from libhidltransport
 
 genrule {
+    name: "android.hidl.manager-V1.0-java_gen_java",
+    tools: ["hidl-gen"],
+    cmd: "$(location hidl-gen) -o $(genDir) -Ljava -randroid.hidl:system/libhidl/transport android.hidl.manager@1.0",
+    srcs: [
+        ":android.hidl.manager@1.0_hal",
+    ],
+    out: [
+        "android/hidl/manager/V1_0/IServiceManager.java",
+        "android/hidl/manager/V1_0/IServiceNotification.java",
+    ],
+}
+
+java_library {
+    name: "android.hidl.manager-V1.0-java",
+    no_framework_libs: true,
+    defaults: ["hidl-java-module-defaults"],
+    srcs: [":android.hidl.manager-V1.0-java_gen_java"],
+    libs: [
+        "hwbinder",
+        "android.hidl.base-V1.0-java",
+    ]
+}
+
+// This package does not export any types. Not creating java constants export.
+
+
+genrule {
     name: "android.hidl.manager@1.0-adapter-helper_genc++",
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++-adapter-sources -randroid.hidl:system/libhidl/transport android.hidl.manager@1.0",
@@ -69,7 +96,6 @@ genrule {
         "android/hidl/manager/1.0/AServiceNotification.h",
     ],
 }
-
 
 cc_library {
     name: "android.hidl.manager@1.0-adapter-helper",
