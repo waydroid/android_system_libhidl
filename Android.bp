@@ -16,6 +16,7 @@ subdirs = [
     "adapter",
     "base",           // libhidlbase
     "libhidlmemory",  // libhidlmemory
+    "minijail",
     "transport",      // libhidltransport
 ]
 
