@@ -298,10 +298,10 @@ struct PassthroughServiceManager : IServiceManager1_1 {
             for (const std::string &lib : libs) {
                 const std::string fullPath = path + lib;
 
-                if (path != HAL_LIBRARY_PATH_SYSTEM) {
-                    handle = android_load_sphal_library(fullPath.c_str(), dlMode);
-                } else {
+                if (path == HAL_LIBRARY_PATH_SYSTEM) {
                     handle = dlopen(fullPath.c_str(), dlMode);
+                } else {
+                    handle = android_load_sphal_library(fullPath.c_str(), dlMode);
                 }
 
                 if (handle == nullptr) {
