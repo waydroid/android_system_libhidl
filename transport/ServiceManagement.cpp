@@ -273,35 +273,47 @@ struct PassthroughServiceManager : IServiceManager1_1 {
         const std::string prefix = packageAndVersion + "-impl";
         const std::string sym = "HIDL_FETCH_" + ifaceName;
 
-        const int dlMode = RTLD_LAZY;
-        void *handle = nullptr;
+        constexpr int dlMode = RTLD_LAZY;
+        void* handle = nullptr;
 
         dlerror(); // clear
 
         std::vector<std::string> paths = {HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR,
                                           HAL_LIBRARY_PATH_VNDK_SP, HAL_LIBRARY_PATH_SYSTEM};
+
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
         const char* env = std::getenv("TREBLE_TESTING_OVERRIDE");
         const bool trebleTestingOverride = env && !strcmp(env, "true");
         if (trebleTestingOverride) {
+            // Load HAL implementations that are statically linked
+            handle = dlopen(nullptr, dlMode);
+            if (handle == nullptr) {
+                const char* error = dlerror();
+                LOG(ERROR) << "Failed to dlopen self: "
+                           << (error == nullptr ? "unknown error" : error);
+            } else if (!eachLib(handle, "SELF", sym)) {
+                return;
+            }
+
             const char* vtsRootPath = std::getenv("VTS_ROOT_PATH");
             if (vtsRootPath && strlen(vtsRootPath) > 0) {
                 const std::string halLibraryPathVtsOverride =
                     std::string(vtsRootPath) + HAL_LIBRARY_PATH_SYSTEM;
-                paths.push_back(halLibraryPathVtsOverride);
+                paths.insert(paths.begin(), halLibraryPathVtsOverride);
             }
         }
 #endif
+
         for (const std::string& path : paths) {
             std::vector<std::string> libs = search(path, prefix, ".so");
 
             for (const std::string &lib : libs) {
                 const std::string fullPath = path + lib;
 
-                if (path != HAL_LIBRARY_PATH_SYSTEM) {
-                    handle = android_load_sphal_library(fullPath.c_str(), dlMode);
-                } else {
+                if (path == HAL_LIBRARY_PATH_SYSTEM) {
                     handle = dlopen(fullPath.c_str(), dlMode);
+                } else {
+                    handle = android_load_sphal_library(fullPath.c_str(), dlMode);
                 }
 
                 if (handle == nullptr) {
