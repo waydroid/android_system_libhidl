@@ -15,6 +15,7 @@
 subdirs = [
     "allocator/1.0",
     "allocator/1.0/default",
+    "allocator/1.0/utils",
     "base/1.0",
     "manager/1.0",
     "manager/1.1",
