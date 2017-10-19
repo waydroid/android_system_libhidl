@@ -208,6 +208,13 @@ struct hidl_memory {
     }
 
     /**
+     * Creates a hidl_memory object whose handle has the same lifetime
+     * as the handle moved into it.
+     */
+    hidl_memory(const hidl_string& name, hidl_handle&& handle, size_t size)
+        : mHandle(std::move(handle)), mSize(size), mName(name) {}
+
+    /**
      * Creates a hidl_memory object, but doesn't take ownership of
      * the passed in native_handle_t; callers are responsible for
      * making sure the handle remains valid while this object is
