@@ -273,6 +273,33 @@ bool hidl_string::empty() const {
     return mSize == 0;
 }
 
+sp<HidlMemory> HidlMemory::getInstance(hidl_memory&& mem) {
+    sp<HidlMemory> instance = new HidlMemory();
+    *instance = std::move(mem);
+    return instance;
+}
+
+sp<HidlMemory> HidlMemory::getInstance(const hidl_string& name, int fd, uint64_t size) {
+    native_handle_t* handle = native_handle_create(1, 0);
+    if (!handle) {
+        close(fd);
+        LOG(ERROR) << "native_handle_create fails";
+        return new HidlMemory();
+    }
+    handle->data[0] = fd;
+
+    hidl_handle hidlHandle;
+    hidlHandle.setTo(handle, true /* shouldOwn */);
+
+    sp<HidlMemory> instance = new HidlMemory(name, std::move(hidlHandle), size);
+    return instance;
+}
+
+// it's required to have at least one out-of-line method to avoid weak vtable
+HidlMemory::~HidlMemory() {
+    hidl_memory::~hidl_memory();
+}
+
 }  // namespace hardware
 }  // namespace android
 
