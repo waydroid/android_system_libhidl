@@ -208,6 +208,13 @@ struct hidl_memory {
     }
 
     /**
+     * Creates a hidl_memory object whose handle has the same lifetime
+     * as the handle moved into it.
+     */
+    hidl_memory(const hidl_string& name, hidl_handle&& handle, size_t size)
+        : mHandle(std::move(handle)), mSize(size), mName(name) {}
+
+    /**
      * Creates a hidl_memory object, but doesn't take ownership of
      * the passed in native_handle_t; callers are responsible for
      * making sure the handle remains valid while this object is
@@ -268,6 +275,9 @@ struct hidl_memory {
         return mSize;
     }
 
+    // @return true if it's valid
+    inline bool valid() const { return handle() != nullptr; }
+
     // offsetof(hidl_memory, mHandle) exposed since mHandle is private.
     static const size_t kOffsetOfHandle;
     // offsetof(hidl_memory, mName) exposed since mHandle is private.
@@ -279,6 +289,30 @@ private:
     hidl_string mName __attribute__ ((aligned(8)));
 };
 
+// HidlMemory is a wrapper class to support sp<> for hidl_memory. It also
+// provides factory methods to create an instance from hidl_memory or
+// from a opened file descriptor. The number of factory methods can be increase
+// to support other type of hidl_memory without break the ABI.
+class HidlMemory : public virtual hidl_memory, public virtual ::android::RefBase {
+public:
+    static sp<HidlMemory> getInstance(hidl_memory&& mem);
+
+    static sp<HidlMemory> getInstance(const hidl_string& name, hidl_handle&& handle, uint64_t size);
+    // @param fd, shall be opened and points to the resource.
+    // @note this method takes the ownership of the fd and will close it in
+    //     destructor
+    static sp<HidlMemory> getInstance(const hidl_string& name, int fd, uint64_t size);
+
+protected:
+    HidlMemory() : hidl_memory() {}
+    HidlMemory(const hidl_string& name, hidl_handle&& handle, size_t size)
+        : hidl_memory(name, std::move(handle), size) {}
+    ~HidlMemory();
+    HidlMemory& operator=(hidl_memory&& src) {
+        hidl_memory::operator=(src);
+        return *this;
+    }
+};
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
