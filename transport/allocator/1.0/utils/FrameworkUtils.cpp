@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <unistd.h>
+
 #include <hidlmemory/FrameworkUtils.h>
 
 namespace android {
