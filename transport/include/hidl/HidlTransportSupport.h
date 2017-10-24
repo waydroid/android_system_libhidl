@@ -22,6 +22,7 @@
 #include <hidl/HidlPassthroughSupport.h>
 #include <hidl/HidlSupport.h>
 #include <hidl/HidlTransportUtils.h>
+#include <hidl/ServiceManagement.h>
 
 namespace android {
 namespace hardware {
@@ -110,16 +111,6 @@ Return<sp<IChild>> castInterface(sp<IParent> parent, const char* childIndicator,
     // Passthrough mode. Got BnChild or BsChild.
     return sp<IChild>(static_cast<IChild *>(parent.get()));
 }
-
-// Returns a service with the following constraints:
-// - retry => service is waited for and returned if available in this process
-// - getStub => internal only. Forces to get the unwrapped (no BsFoo) if available.
-// TODO(b/65843592)
-// If the service is a remote service, this function returns BpBase. If the service is
-// a passthrough service, this function returns the appropriately wrapped Bs child object.
-sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& descriptor,
-                                                             const std::string& instance,
-                                                             bool retry, bool getStub);
 
 template <typename BpType, typename IType = typename BpType::Pure,
           typename = std::enable_if_t<std::is_same<i_tag, typename IType::_hidl_tag>::value>,
