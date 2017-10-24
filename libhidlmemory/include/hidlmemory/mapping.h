@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef ANDROID_HARDWARE_MAPPING_H
+#define ANDROID_HARDWARE_MAPPING_H
 #include <android/hidl/memory/1.0/IMemory.h>
 #include <hidl/HidlSupport.h>
 
@@ -30,3 +32,4 @@ sp<android::hidl::memory::V1_0::IMemory> mapMemory(const hidl_memory &memory);
 
 }  // namespace hardware
 }  // namespace android
+#endif
