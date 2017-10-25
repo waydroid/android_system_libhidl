@@ -217,7 +217,7 @@ std::ostream& operator<<(std::ostream& os, const hidl_string& str) {
 void hidl_string::copyFrom(const char *data, size_t size) {
     // assume my resources are freed.
 
-    if (size > UINT32_MAX) {
+    if (size >= UINT32_MAX) {
         LOG(FATAL) << "string size can't exceed 2^32 bytes: " << size;
     }
     char *buf = (char *)malloc(size + 1);
