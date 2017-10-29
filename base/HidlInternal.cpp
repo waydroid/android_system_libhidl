@@ -24,10 +24,14 @@
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
 #include <dirent.h>
 #include <dlfcn.h>
-#include <regex>
+#include <link.h>
 #include <utils/misc.h>
+#include <regex>
 
 extern "C" __attribute__((weak)) void __sanitizer_cov_dump();
+const char* kSysPropHalCoverage = "hal.coverage.enable";
+const char* kGcovPrefixEnvVar = "GCOV_PREFIX";
+const char* kGcovPrefixPath = "/data/misc/trace/";
 #endif
 
 namespace android {
@@ -49,12 +53,40 @@ HidlInstrumentor::HidlInstrumentor(const std::string& package, const std::string
     if (__sanitizer_cov_dump != nullptr) {
         ::android::add_sysprop_change_callback(
             []() {
-                bool enableCoverage = property_get_bool("hal.coverage.enable", false);
+                bool enableCoverage = property_get_bool(kSysPropHalCoverage, false);
                 if (enableCoverage) {
                     __sanitizer_cov_dump();
                 }
             },
             0);
+    }
+    if (property_get_bool("ro.vts.coverage", false)) {
+        const std::string gcovPath = kGcovPrefixPath + std::to_string(getpid());
+        setenv(kGcovPrefixEnvVar, gcovPath.c_str(), true /* overwrite */);
+        ::android::add_sysprop_change_callback(
+            []() {
+                const bool enableCoverage = property_get_bool(kSysPropHalCoverage, false);
+                if (enableCoverage) {
+                    dl_iterate_phdr(
+                        [](struct dl_phdr_info* info, size_t /* size */, void* /* data */) {
+                            if (strlen(info->dlpi_name) == 0) return 0;
+
+                            void* handle = dlopen(info->dlpi_name, RTLD_LAZY);
+                            if (handle == nullptr) {
+                                LOG(INFO) << "coverage dlopen failed: " << dlerror();
+                                return 0;
+                            }
+                            void (*flush)() = (void (*)())dlsym(handle, "__gcov_flush");
+                            if (flush == nullptr) {
+                                return 0;
+                            }
+                            flush();
+                            return 0;
+                        },
+                        nullptr /* data */);
+                }
+            },
+            0 /* priority */);
     }
 #endif
 }
