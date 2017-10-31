@@ -5,6 +5,9 @@
 ################################################################################
 LOCAL_PATH:= $(call my-dir)
 
+# TODO(b/68433855): re-enable building this in the PDK
+ifneq ($(TARGET_BUILD_PDK),true)
+
 include $(CLEAR_VARS)
 LOCAL_MODULE := android.hidl.base-V1.0-java-static
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
@@ -53,3 +56,5 @@ $(GEN): $(LOCAL_PATH)/base/1.0/IBase.hal
 	$(transform-generated-source)
 LOCAL_GENERATED_SOURCES += $(GEN)
 include $(BUILD_STATIC_JAVA_LIBRARY)
+
+endif # TARGET_BUILD_PDK not true
