@@ -273,9 +273,15 @@ bool hidl_string::empty() const {
     return mSize == 0;
 }
 
+sp<HidlMemory> HidlMemory::getInstance(const hidl_memory& mem) {
+    sp<HidlMemory> instance = new HidlMemory();
+    instance->hidl_memory::operator=(mem);
+    return instance;
+}
+
 sp<HidlMemory> HidlMemory::getInstance(hidl_memory&& mem) {
     sp<HidlMemory> instance = new HidlMemory();
-    *instance = std::move(mem);
+    instance->hidl_memory::operator=(std::move(mem));
     return instance;
 }
 
@@ -294,6 +300,11 @@ sp<HidlMemory> HidlMemory::getInstance(const hidl_string& name, int fd, uint64_t
     sp<HidlMemory> instance = new HidlMemory(name, std::move(hidlHandle), size);
     return instance;
 }
+
+HidlMemory::HidlMemory() : hidl_memory() {}
+
+HidlMemory::HidlMemory(const hidl_string& name, hidl_handle&& handle, size_t size)
+        : hidl_memory(name, std::move(handle), size) {}
 
 // it's required to have at least one out-of-line method to avoid weak vtable
 HidlMemory::~HidlMemory() {
