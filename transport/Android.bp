@@ -25,7 +25,7 @@ subdirs = [
     "token/1.0/utils",
 ]
 
-cc_library_shared {
+cc_library {
     name: "libhidltransport",
     vendor_available: true,
     vndk: {
