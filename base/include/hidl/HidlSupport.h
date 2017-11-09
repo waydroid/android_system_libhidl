@@ -303,11 +303,11 @@ public:
     //     destructor
     static sp<HidlMemory> getInstance(const hidl_string& name, int fd, uint64_t size);
 
+    virtual ~HidlMemory();
 protected:
     HidlMemory() : hidl_memory() {}
     HidlMemory(const hidl_string& name, hidl_handle&& handle, size_t size)
         : hidl_memory(name, std::move(handle), size) {}
-    ~HidlMemory();
     HidlMemory& operator=(hidl_memory&& src) {
         hidl_memory::operator=(src);
         return *this;
