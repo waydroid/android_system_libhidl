@@ -25,6 +25,11 @@ subdirs = [
     "token/1.0/utils",
 ]
 
+hidl_package_root {
+    name: "android.hidl",
+    path: "system/libhidl/transport",
+}
+
 cc_library {
     name: "libhidltransport",
     vendor_available: true,
