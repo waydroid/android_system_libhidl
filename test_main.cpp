@@ -17,12 +17,15 @@
 #define LOG_TAG "LibHidlTest"
 
 #include <android-base/logging.h>
-#include <condition_variable>
+#include <android/hardware/tests/inheritance/1.0/IParent.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hidl/HidlSupport.h>
+#include <hidl/ServiceManagement.h>
 #include <hidl/Status.h>
 #include <hidl/TaskRunner.h>
+#include <condition_variable>
+#include <fstream>
 #include <vector>
 
 #define EXPECT_ARRAYEQ(__a1__, __a2__, __size__) EXPECT_TRUE(isArrayEqual(__a1__, __a2__, __size__))
@@ -44,6 +47,17 @@ static inline bool is2dArrayEqual(const T arr1, const S arr2, size_t size1, size
             if(arr1[i][j] != arr2[i][j])
                 return false;
     return true;
+}
+
+bool isLibraryOpen(const std::string& lib) {
+    std::ifstream ifs("/proc/self/maps");
+    for (std::string line; std::getline(ifs, line);) {
+        if (line.size() >= lib.size() && line.substr(line.size() - lib.size()) == lib) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 class LibHidlTest : public ::testing::Test {
@@ -441,7 +455,17 @@ TEST_F(LibHidlTest, StatusStringTest) {
 
     EXPECT_THAT(toString(Status::fromExceptionCode(Status::EX_NULL_POINTER)),
             HasSubstr("EX_NULL_POINTER"));
+}
 
+TEST_F(LibHidlTest, PreloadTest) {
+    using ::android::hardware::preloadPassthroughService;
+    using ::android::hardware::tests::inheritance::V1_0::IParent;
+
+    static const std::string kLib = "android.hardware.tests.inheritance@1.0-impl.so";
+
+    EXPECT_FALSE(isLibraryOpen(kLib));
+    preloadPassthroughService<IParent>();
+    EXPECT_TRUE(isLibraryOpen(kLib));
 }
 
 int main(int argc, char **argv) {
