@@ -295,23 +295,22 @@ private:
 // to support other type of hidl_memory without break the ABI.
 class HidlMemory : public virtual hidl_memory, public virtual ::android::RefBase {
 public:
+    static sp<HidlMemory> getInstance(const hidl_memory& mem);
+
     static sp<HidlMemory> getInstance(hidl_memory&& mem);
 
     static sp<HidlMemory> getInstance(const hidl_string& name, hidl_handle&& handle, uint64_t size);
     // @param fd, shall be opened and points to the resource.
     // @note this method takes the ownership of the fd and will close it in
     //     destructor
+    // @return nullptr in failure with the fd closed
     static sp<HidlMemory> getInstance(const hidl_string& name, int fd, uint64_t size);
 
     virtual ~HidlMemory();
+
 protected:
-    HidlMemory() : hidl_memory() {}
-    HidlMemory(const hidl_string& name, hidl_handle&& handle, size_t size)
-        : hidl_memory(name, std::move(handle), size) {}
-    HidlMemory& operator=(hidl_memory&& src) {
-        hidl_memory::operator=(src);
-        return *this;
-    }
+    HidlMemory();
+    HidlMemory(const hidl_string& name, hidl_handle&& handle, size_t size);
 };
 ////////////////////////////////////////////////////////////////////////////////
 
