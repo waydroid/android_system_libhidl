@@ -470,18 +470,21 @@ struct Waiter : IServiceNotification {
     Waiter(const std::string& interface, const std::string& instanceName,
            const sp<IServiceManager1_1>& sm) : mInterfaceName(interface),
                                                mInstanceName(instanceName), mSm(sm) {
-        Return<bool> ret = mSm->registerForNotifications(interface, instanceName, this);
+    }
+
+    void onFirstRef() override {
+        Return<bool> ret = mSm->registerForNotifications(mInterfaceName, mInstanceName, this);
 
         if (!ret.isOk()) {
             LOG(ERROR) << "Transport error, " << ret.description()
-                       << ", during notification registration for " << interface << "/"
-                       << instanceName << ".";
+                       << ", during notification registration for " << mInterfaceName << "/"
+                       << mInstanceName << ".";
             return;
         }
 
         if (!ret) {
-            LOG(ERROR) << "Could not register for notifications for " << interface << "/"
-                       << instanceName << ".";
+            LOG(ERROR) << "Could not register for notifications for " << mInterfaceName << "/"
+                       << mInstanceName << ".";
             return;
         }
 
