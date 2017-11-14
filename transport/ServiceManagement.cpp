@@ -467,6 +467,40 @@ void preloadPassthroughService(const std::string &descriptor) {
 }
 
 struct Waiter : IServiceNotification {
+    Waiter(const std::string& interface, const std::string& instanceName,
+           const sp<IServiceManager1_1>& sm) : mInterfaceName(interface),
+                                               mInstanceName(instanceName), mSm(sm) {
+    }
+
+    void onFirstRef() override {
+        Return<bool> ret = mSm->registerForNotifications(mInterfaceName, mInstanceName, this);
+
+        if (!ret.isOk()) {
+            LOG(ERROR) << "Transport error, " << ret.description()
+                       << ", during notification registration for " << mInterfaceName << "/"
+                       << mInstanceName << ".";
+            return;
+        }
+
+        if (!ret) {
+            LOG(ERROR) << "Could not register for notifications for " << mInterfaceName << "/"
+                       << mInstanceName << ".";
+            return;
+        }
+
+        mRegisteredForNotifications = true;
+    }
+
+    ~Waiter() {
+        if (mRegisteredForNotifications) {
+            if (!mSm->unregisterForNotifications(mInterfaceName, mInstanceName, this).
+                    withDefault(false)) {
+                LOG(ERROR) << "Could not unregister service notification for "
+                    << mInterfaceName << "/" << mInstanceName << ".";
+            }
+        }
+    }
+
     Return<void> onRegistration(const hidl_string& /* fqName */,
                                 const hidl_string& /* name */,
                                 bool /* preexisting */) override {
@@ -481,8 +515,15 @@ struct Waiter : IServiceNotification {
         return Void();
     }
 
-    void wait(const std::string &interface, const std::string &instanceName) {
+    void wait() {
         using std::literals::chrono_literals::operator""s;
+
+        if (!mRegisteredForNotifications) {
+            // As an alternative, just sleep for a second and return
+            LOG(WARNING) << "Waiting one second for " << mInterfaceName << "/" << mInstanceName;
+            sleep(1);
+            return;
+        }
 
         std::unique_lock<std::mutex> lock(mMutex);
         while(true) {
@@ -494,49 +535,64 @@ struct Waiter : IServiceNotification {
                 break;
             }
 
-            LOG(WARNING) << "Waited one second for "
-                         << interface << "/" << instanceName
+            LOG(WARNING) << "Waited one second for " << mInterfaceName << "/" << mInstanceName
                          << ". Waiting another...";
         }
     }
 
+    // Be careful when using this; after calling reset(), you must always try to retrieve
+    // the corresponding service before blocking on the waiter; otherwise, you might run
+    // into a race-condition where the service has just (re-)registered, you clear the state
+    // here, and subsequently calling waiter->wait() will block forever.
+    void reset() {
+        std::unique_lock<std::mutex> lock(mMutex);
+        mRegistered = false;
+    }
 private:
+    const std::string mInterfaceName;
+    const std::string mInstanceName;
+    const sp<IServiceManager1_1>& mSm;
     std::mutex mMutex;
     std::condition_variable mCondition;
     bool mRegistered = false;
+    bool mRegisteredForNotifications = false;
 };
 
 void waitForHwService(
         const std::string &interface, const std::string &instanceName) {
-    const sp<IServiceManager1_1> manager = defaultServiceManager1_1();
+    sp<Waiter> waiter = new Waiter(interface, instanceName, defaultServiceManager1_1());
+    waiter->wait();
+}
 
-    if (manager == nullptr) {
-        LOG(ERROR) << "Could not get default service manager.";
-        return;
+// Prints relevant error/warning messages for error return values from
+// details::canCastInterface(), both transaction errors (!castReturn.isOk())
+// as well as actual cast failures (castReturn.isOk() && castReturn = false).
+// Returns 'true' if the error is non-fatal and it's useful to retry
+bool handleCastError(const Return<bool>& castReturn, const std::string& descriptor,
+                     const std::string& instance) {
+    if (castReturn.isOk()) {
+        if (castReturn) {
+            details::logAlwaysFatal("Successful cast value passed into handleCastError.");
+        }
+        // This should never happen, and there's not really a point in retrying.
+        ALOGE("getService: received incompatible service (bug in hwservicemanager?) for "
+            "%s/%s.", descriptor.c_str(), instance.c_str());
+        return false;
     }
-
-    sp<Waiter> waiter = new Waiter();
-    Return<bool> ret = manager->registerForNotifications(interface, instanceName, waiter);
-
-    if (!ret.isOk()) {
-        LOG(ERROR) << "Transport error, " << ret.description()
-            << ", during notification registration for "
-            << interface << "/" << instanceName << ".";
-        return;
+    if (castReturn.isDeadObject()) {
+        ALOGW("getService: found dead hwbinder service for %s/%s.", descriptor.c_str(),
+              instance.c_str());
+        return true;
     }
-
-    if (!ret) {
-        LOG(ERROR) << "Could not register for notifications for "
-            << interface << "/" << instanceName << ".";
-        return;
-    }
-
-    waiter->wait(interface, instanceName);
-
-    if (!manager->unregisterForNotifications(interface, instanceName, waiter).withDefault(false)) {
-        LOG(ERROR) << "Could not unregister service notification for "
-            << interface << "/" << instanceName << ".";
-    }
+    // This can happen due to:
+    // 1) No SELinux permissions
+    // 2) Other transaction failure (no buffer space, kernel error)
+    // The first isn't recoverable, but the second is.
+    // Since we can't yet differentiate between the two, and clients depend
+    // on us not blocking in case 1), treat this as a fatal error for now.
+    ALOGW("getService: unable to call into hwbinder service for %s/%s.",
+          descriptor.c_str(), instance.c_str());
+    return false;
 }
 
 sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& descriptor,
@@ -546,7 +602,7 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
     using ::android::hidl::base::V1_0::IBase;
     using ::android::hidl::manager::V1_0::IServiceManager;
 
-    const sp<IServiceManager> sm = defaultServiceManager();
+    const sp<IServiceManager1_1> sm = defaultServiceManager1_1();
     if (sm == nullptr) {
         ALOGE("getService: defaultServiceManager() is null");
         return nullptr;
@@ -580,17 +636,9 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
     const bool vintfLegacy = (transport == Transport::EMPTY);
 #endif  // LIBHIDL_TARGET_TREBLE
 
-    for (int tries = 0;
-         !getStub && (vintfHwbinder || (vintfLegacy && tries == 0)) && (retry || tries < 1);
-         tries++) {
-        if (tries > 1) {
-            ALOGI("getService: Will do try %d for %s/%s in 1s...", tries, descriptor.c_str(),
-                  instance.c_str());
-            sleep(1);  // TODO(b/67425500): remove and update waitForHwService function
-        }
-        if (vintfHwbinder && tries > 0) {
-            waitForHwService(descriptor, instance);
-        }
+    sp<Waiter> waiter = new Waiter(descriptor, instance, sm);
+    while (!getStub && (vintfHwbinder || vintfLegacy)) {
+        waiter->reset(); // don't reorder this -- see comments on reset()
         Return<sp<IBase>> ret = sm->get(descriptor, instance);
         if (!ret.isOk()) {
             ALOGE("getService: defaultServiceManager()->get returns %s for %s/%s.",
@@ -598,39 +646,22 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
             break;
         }
         sp<IBase> base = ret;
-        if (base == nullptr) {
-            if (tries > 0) {
-                ALOGW("getService: found unexpected null hwbinder interface for %s/%s.",
-                      descriptor.c_str(), instance.c_str());
+        if (base != nullptr) {
+            Return<bool> canCastRet =
+                details::canCastInterface(base.get(), descriptor.c_str(), true /* emitError */);
+
+            if (canCastRet.isOk() && canCastRet) {
+                return base; // still needs to be wrapped by Bp class.
             }
-            continue;
+
+            if (!handleCastError(canCastRet, descriptor, instance)) break;
         }
 
-        Return<bool> canCastRet =
-            details::canCastInterface(base.get(), descriptor.c_str(), true /* emitError */);
+        // In case of legacy or we were not asked to retry, don't.
+        if (vintfLegacy || !retry) break;
 
-        if (!canCastRet.isOk()) {
-            if (canCastRet.isDeadObject()) {
-                ALOGW("getService: found dead hwbinder service for %s/%s.", descriptor.c_str(),
-                      instance.c_str());
-                continue;
-            }
-            // TODO(b/67425500): breaks getService == nullptr => hal available assumptions if the
-            // service has a transaction failure (one example of this is if the service's binder
-            // buffer is full). If this isn't here, you get an infinite loop when you don't have
-            // permission to talk to a service.
-            ALOGW("getService: unable to call into hwbinder service for %s/%s.", descriptor.c_str(),
-                  instance.c_str());
-            break;
-        }
-
-        if (!canCastRet) {
-            ALOGW("getService: received incompatible service (bug in hwservicemanager?) for %s/%s.",
-                  descriptor.c_str(), instance.c_str());
-            break;
-        }
-
-        return base;  // still needs to be wrapped by Bp class.
+        ALOGI("getService: Trying again for %s/%s...", descriptor.c_str(), instance.c_str());
+        waiter->wait();
     }
 
     if (getStub || vintfPassthru || vintfLegacy) {
