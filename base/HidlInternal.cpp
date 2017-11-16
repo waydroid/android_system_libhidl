@@ -29,9 +29,10 @@
 #include <regex>
 
 extern "C" __attribute__((weak)) void __sanitizer_cov_dump();
-const char* kSysPropHalCoverage = "hal.coverage.enable";
 const char* kGcovPrefixEnvVar = "GCOV_PREFIX";
+const char* kGcovPrefixOverrideEnvVar = "GCOV_PREFIX_OVERRIDE";
 const char* kGcovPrefixPath = "/data/misc/trace/";
+const char* kSysPropHalCoverage = "hal.coverage.enable";
 #endif
 
 namespace android {
@@ -61,8 +62,11 @@ HidlInstrumentor::HidlInstrumentor(const std::string& package, const std::string
             0);
     }
     if (property_get_bool("ro.vts.coverage", false)) {
-        const std::string gcovPath = kGcovPrefixPath + std::to_string(getpid());
-        setenv(kGcovPrefixEnvVar, gcovPath.c_str(), true /* overwrite */);
+        const char* prefixOverride = getenv(kGcovPrefixOverrideEnvVar);
+        if (prefixOverride == nullptr || strcmp(prefixOverride, "true") != 0) {
+            const std::string gcovPath = kGcovPrefixPath + std::to_string(getpid());
+            setenv(kGcovPrefixEnvVar, gcovPath.c_str(), true /* overwrite */);
+        }
         ::android::add_sysprop_change_callback(
             []() {
                 const bool enableCoverage = property_get_bool(kSysPropHalCoverage, false);
