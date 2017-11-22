@@ -53,5 +53,16 @@ bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service
     return true;
 }
 
+namespace details {
+int32_t getPidIfSharable() {
+#if LIBHIDL_TARGET_DEBUGGABLE
+    return getpid();
+#else
+    using android::hidl::manager::V1_0::IServiceManager;
+    return IServiceManager::PidConstant::NO_PID;
+#endif
+}
+}  // namespace details
+
 }  // namespace hardware
 }  // namespace android
