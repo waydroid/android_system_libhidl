@@ -78,6 +78,9 @@ bool interfacesEqual(sp<ILeft> left, sp<IRight> right) {
 
 namespace details {
 
+// Return PID on userdebug / eng builds and IServiceManager::PidConstant::NO_PID on user builds.
+int32_t getPidIfSharable();
+
 // cast the interface IParent to IChild.
 // Return nonnull if cast successful.
 // Return nullptr if:
