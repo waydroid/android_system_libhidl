@@ -16,6 +16,8 @@
 #include <hidl/HidlTransportSupport.h>
 #include <hidl/HidlBinderSupport.h>
 
+#include <android/hidl/manager/1.0/IServiceManager.h>
+
 namespace android {
 namespace hardware {
 
@@ -59,7 +61,7 @@ int32_t getPidIfSharable() {
     return getpid();
 #else
     using android::hidl::manager::V1_0::IServiceManager;
-    return IServiceManager::PidConstant::NO_PID;
+    return static_cast<int32_t>(IServiceManager::PidConstant::NO_PID);
 #endif
 }
 }  // namespace details
