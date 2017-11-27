@@ -371,6 +371,8 @@ sp<IType> fromBinder(const sp<IBinder>& binderIface) {
 
 void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin);
 void joinBinderRpcThreadpool();
+int setupBinderPolling();
+status_t handleBinderPoll();
 
 }  // namespace hardware
 }  // namespace android
