@@ -983,6 +983,13 @@ std::string toString(const hidl_array<T, SIZE1, SIZE2, SIZES...> &a) {
             + details::toString(details::const_accessor<T, SIZE1, SIZE2, SIZES...>(a.data()));
 }
 
+/**
+ * Every HIDL generated enum generates an implementation of this function.
+ * E.x.: for(const auto v : hidl_enum_iterator<Enum>) { ... }
+ */
+template <typename>
+struct hidl_enum_iterator;
+
 }  // namespace hardware
 }  // namespace android
 
