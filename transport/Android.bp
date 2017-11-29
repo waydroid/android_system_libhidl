@@ -12,19 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-subdirs = [
-    "allocator/1.0",
-    "allocator/1.0/default",
-    "allocator/1.0/utils",
-    "base/1.0",
-    "manager/1.0",
-    "manager/1.1",
-    "memory/1.0",
-    "memory/1.0/default",
-    "token/1.0",
-    "token/1.0/utils",
-]
-
 hidl_package_root {
     name: "android.hidl",
     path: "system/libhidl/transport",
