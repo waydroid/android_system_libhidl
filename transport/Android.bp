@@ -21,7 +21,6 @@ subdirs = [
     "manager/1.1",
     "memory/1.0",
     "memory/1.0/default",
-    "memory/token/1.0",
     "token/1.0",
     "token/1.0/utils",
 ]
