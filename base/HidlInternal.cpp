@@ -19,6 +19,8 @@
 #include <hidl/HidlInternal.h>
 
 #include <android-base/logging.h>
+#include <android-base/properties.h>
+#include <android-base/stringprintf.h>
 #include <cutils/properties.h>
 
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
@@ -41,6 +43,21 @@ namespace details {
 
 void logAlwaysFatal(const char* message) {
     LOG(FATAL) << message;
+}
+
+std::string getVndkVersionStr() {
+    static std::string vndkVersion("0");
+    // "0" means the vndkVersion must be initialized with the property value.
+    // Otherwise, return the value.
+    if (vndkVersion == "0") {
+        vndkVersion = android::base::GetProperty("ro.vndk.version", "");
+        if (vndkVersion != "" && vndkVersion != "current") {
+            vndkVersion = "-" + vndkVersion;
+        } else {
+            vndkVersion = "";
+        }
+    }
+    return vndkVersion;
 }
 
 // ----------------------------------------------------------------------
@@ -127,8 +144,10 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
                      "") > 0) {
         instrumentationLibPaths.push_back(instrumentationLibPath);
     } else {
+        static std::string halLibPathVndkSp = android::base::StringPrintf(
+            HAL_LIBRARY_PATH_VNDK_SP_FOR_VERSION, getVndkVersionStr().c_str());
         instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_SYSTEM);
-        instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_VNDK_SP);
+        instrumentationLibPaths.push_back(halLibPathVndkSp);
         instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_VENDOR);
         instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_ODM);
     }
