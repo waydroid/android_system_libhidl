@@ -29,11 +29,13 @@
 #include <set>
 
 #include <hidl/HidlBinderSupport.h>
+#include <hidl/HidlInternal.h>
 #include <hidl/ServiceManagement.h>
 #include <hidl/Status.h>
 
 #include <android-base/logging.h>
 #include <android-base/properties.h>
+#include <android-base/stringprintf.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
 #include <vndksupport/linker.h>
@@ -278,8 +280,10 @@ struct PassthroughServiceManager : IServiceManager1_1 {
 
         dlerror(); // clear
 
+        static std::string halLibPathVndkSp = android::base::StringPrintf(
+            HAL_LIBRARY_PATH_VNDK_SP_FOR_VERSION, details::getVndkVersionStr().c_str());
         std::vector<std::string> paths = {HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR,
-                                          HAL_LIBRARY_PATH_VNDK_SP, HAL_LIBRARY_PATH_SYSTEM};
+                                          halLibPathVndkSp, HAL_LIBRARY_PATH_SYSTEM};
 
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
         const char* env = std::getenv("TREBLE_TESTING_OVERRIDE");
@@ -394,13 +398,17 @@ struct PassthroughServiceManager : IServiceManager1_1 {
     Return<void> debugDump(debugDump_cb _hidl_cb) override {
         using Arch = ::android::hidl::base::V1_0::DebugInfo::Architecture;
         using std::literals::string_literals::operator""s;
+        static std::string halLibPathVndkSp64 = android::base::StringPrintf(
+            HAL_LIBRARY_PATH_VNDK_SP_64BIT_FOR_VERSION, details::getVndkVersionStr().c_str());
+        static std::string halLibPathVndkSp32 = android::base::StringPrintf(
+            HAL_LIBRARY_PATH_VNDK_SP_32BIT_FOR_VERSION, details::getVndkVersionStr().c_str());
         static std::vector<std::pair<Arch, std::vector<const char*>>> sAllPaths{
             {Arch::IS_64BIT,
              {HAL_LIBRARY_PATH_ODM_64BIT, HAL_LIBRARY_PATH_VENDOR_64BIT,
-              HAL_LIBRARY_PATH_VNDK_SP_64BIT, HAL_LIBRARY_PATH_SYSTEM_64BIT}},
+              halLibPathVndkSp64.c_str(), HAL_LIBRARY_PATH_SYSTEM_64BIT}},
             {Arch::IS_32BIT,
              {HAL_LIBRARY_PATH_ODM_32BIT, HAL_LIBRARY_PATH_VENDOR_32BIT,
-              HAL_LIBRARY_PATH_VNDK_SP_32BIT, HAL_LIBRARY_PATH_SYSTEM_32BIT}}};
+              halLibPathVndkSp32.c_str(), HAL_LIBRARY_PATH_SYSTEM_32BIT}}};
         std::map<std::string, InstanceDebugInfo> map;
         for (const auto &pair : sAllPaths) {
             Arch arch = pair.first;
