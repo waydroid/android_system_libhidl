@@ -639,22 +639,22 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
     const bool vintfHwbinder = (transport == Transport::HWBINDER);
     const bool vintfPassthru = (transport == Transport::PASSTHROUGH);
 
-#ifdef LIBHIDL_TARGET_TREBLE
+#ifdef ENFORCE_VINTF_MANIFEST
 
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
     const char* env = std::getenv("TREBLE_TESTING_OVERRIDE");
     const bool trebleTestingOverride = env && !strcmp(env, "true");
     const bool vintfLegacy = (transport == Transport::EMPTY) && trebleTestingOverride;
-#else   // LIBHIDL_TARGET_TREBLE but not LIBHIDL_TARGET_DEBUGGABLE
+#else   // ENFORCE_VINTF_MANIFEST but not LIBHIDL_TARGET_DEBUGGABLE
     const bool trebleTestingOverride = false;
     const bool vintfLegacy = false;
 #endif  // LIBHIDL_TARGET_DEBUGGABLE
 
-#else   // not LIBHIDL_TARGET_TREBLE
+#else   // not ENFORCE_VINTF_MANIFEST
     const char* env = std::getenv("TREBLE_TESTING_OVERRIDE");
     const bool trebleTestingOverride = env && !strcmp(env, "true");
     const bool vintfLegacy = (transport == Transport::EMPTY);
-#endif  // LIBHIDL_TARGET_TREBLE
+#endif  // ENFORCE_VINTF_MANIFEST
 
     sp<Waiter> waiter = new Waiter(descriptor, instance, sm);
     while (!getStub && (vintfHwbinder || vintfLegacy)) {
