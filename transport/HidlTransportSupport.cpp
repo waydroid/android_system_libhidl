@@ -30,6 +30,14 @@ void joinRpcThreadpool() {
     joinBinderRpcThreadpool();
 }
 
+int setupTransportPolling() {
+    return setupBinderPolling();
+}
+
+status_t handleTransportPoll(int /*fd*/) {
+    return handleBinderPoll();
+}
+
 bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service,
                            int policy, int priority) {
     if (service->isRemote()) {
