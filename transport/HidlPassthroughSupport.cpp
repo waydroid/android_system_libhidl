@@ -37,7 +37,10 @@ sp<IBase> wrapPassthroughInternal(sp<IBase> iface) {
     }
     auto func = getBsConstructorMap().get(myDescriptor, nullptr);
     if (!func) {
-        return nullptr;
+        func = gBsConstructorMap.get(myDescriptor, nullptr);
+        if (!func) {
+            return nullptr;
+        }
     }
 
     sp<IBase> base = func(static_cast<void*>(iface.get()));
