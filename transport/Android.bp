@@ -74,8 +74,8 @@ cc_library {
         debuggable: {
             cflags: ["-DLIBHIDL_TARGET_DEBUGGABLE"],
         },
-        treble: {
-            cflags: ["-DLIBHIDL_TARGET_TREBLE"]
+        enforce_vintf_manifest: {
+            cflags: ["-DENFORCE_VINTF_MANIFEST"]
         },
     },
 }
