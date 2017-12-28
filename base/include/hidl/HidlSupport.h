@@ -990,6 +990,12 @@ std::string toString(const hidl_array<T, SIZE1, SIZE2, SIZES...> &a) {
 template <typename>
 struct hidl_enum_iterator;
 
+/**
+ * Bitfields in HIDL are the underlying type of the enumeration.
+ */
+template <typename Enum>
+using hidl_bitfield = typename std::underlying_type<Enum>::type;
+
 }  // namespace hardware
 }  // namespace android
 
