@@ -16,10 +16,13 @@
 
 #include <hidladapter/HidlBinderAdapter.h>
 
+#include <android-base/logging.h>
+#include <android-base/properties.h>
 #include <android/hidl/base/1.0/IBase.h>
 #include <android/hidl/manager/1.0/IServiceManager.h>
 #include <hidl/HidlTransportSupport.h>
 
+#include <unistd.h>
 #include <iostream>
 #include <map>
 #include <string>
@@ -28,21 +31,71 @@ namespace android {
 namespace hardware {
 namespace details {
 
+using android::base::SetProperty;
+using android::base::WaitForProperty;
+
+const static std::string kDeactivateProp = "test.hidl.adapters.deactivated";
+
+void usage(const std::string& me) {
+    std::cerr << "usage: " << me << " [-p] interface-name instance-name number-of-threads."
+              << std::endl;
+    std::cerr << "    -p: stop based on property " << kDeactivateProp << "and reset it."
+              << std::endl;
+}
+
+bool processArguments(int* argc, char*** argv, bool* propertyStop) {
+    int c;
+    while ((c = getopt(*argc, *argv, "p")) != -1) {
+        switch (c) {
+            case 'p': {
+                *propertyStop = true;
+                break;
+            }
+            default: { return false; }
+        }
+    }
+
+    *argc -= optind;
+    *argv += optind;
+    return true;
+}
+
+// only applies for -p argument
+void waitForAdaptersDeactivated() {
+    using std::literals::chrono_literals::operator""s;
+
+    while (!WaitForProperty(kDeactivateProp, "true", 30s)) {
+        // Log this so that when using this option on testing devices, there is
+        // a clear indication if adapters are not properly stopped
+        LOG(WARNING) << "Adapter use in progress. Waiting for stop based on 'true' "
+                     << kDeactivateProp;
+    }
+
+    SetProperty(kDeactivateProp, "false");
+}
+
 int adapterMain(const std::string& package, int argc, char** argv,
                 const AdaptersFactory& adapters) {
     using android::hardware::configureRpcThreadpool;
     using android::hidl::base::V1_0::IBase;
     using android::hidl::manager::V1_0::IServiceManager;
 
-    if (argc != 4) {
-        std::cerr << "usage: " << argv[0] << " interface-name instance-name number-of-threads."
-                  << std::endl;
-        return 1;
+    const std::string& me = argc > 0 ? argv[0] : "(error)";
+
+    bool propertyStop = false;
+    if (!processArguments(&argc, &argv, &propertyStop)) {
+        usage(me);
+        return EINVAL;
     }
 
-    std::string interfaceName = package + "::" + argv[1];
-    std::string instanceName = argv[2];
-    int threadNumber = std::stoi(argv[3]);
+    if (argc != 3) {
+        usage(me);
+        return EINVAL;
+    }
+
+    std::string interfaceName = package + "::" + argv[0];
+    std::string instanceName = argv[1];
+    int threadNumber = std::stoi(argv[2]);
 
     if (threadNumber <= 0) {
         std::cerr << "ERROR: invalid thread number " << threadNumber
@@ -83,8 +136,13 @@ int adapterMain(const std::string& package, int argc, char** argv,
         return 1;
     }
 
-    std::cout << "Press any key to disassociate adapter." << std::endl;
-    getchar();
+    if (propertyStop) {
+        std::cout << "Set " << kDeactivateProp << " to true to deactivate." << std::endl;
+        waitForAdaptersDeactivated();
+    } else {
+        std::cout << "Press any key to disassociate adapter." << std::endl;
+        getchar();
+    }
 
     bool restored = manager->add(instanceName, implementation).withDefault(false);
     if (!restored) {
