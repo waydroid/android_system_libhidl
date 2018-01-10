@@ -45,3 +45,26 @@ cc_library {
         "mapping.cpp"
     ],
 }
+
+cc_test {
+   name: "libhidlcache_test",
+    defaults: ["hidl-gen-defaults"],
+
+    shared_libs: [
+        "android.hidl.allocator@1.0",
+        "android.hidl.memory@1.0",
+        "android.hidl.memory.block@1.0",
+        "android.hidl.memory.token@1.0",
+        "libbase",
+        "libcutils",
+        "libhidlbase",
+        "libhidlmemory",
+        "libhidlcache",
+        "libhidltransport",
+        "libhwbinder",
+        "liblog",
+        "libutils",
+    ],
+
+    srcs: ["libhidlcache_test.cpp"],
+}
