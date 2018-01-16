@@ -485,8 +485,7 @@ struct Waiter : IServiceNotification {
         // that thread, it will block forever because we hung up the one and only
         // binder thread on a condition variable that can only be notified by an
         // incoming binder call.
-        if (ProcessState::self()->getMaxThreads() <= 1 &&
-                IPCThreadState::self()->isLooperThread()) {
+        if (IPCThreadState::self()->isOnlyBinderThread()) {
             LOG(WARNING) << "Can't efficiently wait for " << mInterfaceName << "/"
                          << mInstanceName << ", because we are called from "
                          << "the only binder thread in this process.";
