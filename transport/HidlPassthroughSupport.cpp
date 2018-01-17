@@ -25,30 +25,52 @@ namespace android {
 namespace hardware {
 namespace details {
 
+static sp<IBase> tryWrap(const std::string& descriptor, sp<IBase> iface) {
+    auto func = getBsConstructorMap().get(descriptor, nullptr);
+    if (!func) {
+        func = gBsConstructorMap.get(descriptor, nullptr);
+    }
+    if (func) {
+        return func(static_cast<void*>(iface.get()));
+    }
+    return nullptr;
+}
+
 sp<IBase> wrapPassthroughInternal(sp<IBase> iface) {
     if (iface == nullptr || iface->isRemote()) {
         // doesn't know how to handle it.
         return iface;
     }
-    std::string myDescriptor = getDescriptor(iface.get());
-    if (myDescriptor.empty()) {
-        // interfaceDescriptor fails
+
+    // Consider the case when an AOSP interface is extended by partners.
+    // Then the partner's HAL interface library is loaded only in the vndk
+    // linker namespace, but not in the default linker namespace, where
+    // this code runs. As a result, BsConstructorMap in the latter does not
+    // have the entry for the descriptor name.
+    //
+    // Therefore, we try to wrap using the descript names of the parent
+    // types along the interface chain, instead of always using the descriptor
+    // name of the current interface.
+    sp<IBase> base;
+    auto ret = iface->interfaceChain([&](const auto& types) {
+        for (const std::string& descriptor : types) {
+            base = tryWrap(descriptor, iface);
+            if (base != nullptr) {
+                break;  // wrap is successful. no need to lookup further.
+            }
+        }
+    });
+
+    if (!ret.isOk()) {
         return nullptr;
     }
-    auto func = getBsConstructorMap().get(myDescriptor, nullptr);
-    if (!func) {
-        func = gBsConstructorMap.get(myDescriptor, nullptr);
-        if (!func) {
-            return nullptr;
-        }
-    }
 
-    sp<IBase> base = func(static_cast<void*>(iface.get()));
-
-    // To ensure this is an instance of IType, we would normally
-    // call castFrom, but gBsConstructorMap guarantees that its
-    // result is of the appropriate type (not necessaryly BsType,
-    // but definitely a child of IType).
+    // It is ensured that if this function is called with an instance of IType
+    // then the corresponding descriptor would be in the BsConstructorMap.
+    // This is because referencing IType implies that the interface library
+    // defining the type has already been loaded into the current linker
+    // namespace, and thus the library should have added an entry into the
+    // BsConstructorMap while executing the library's constructor.
     return base;
 }
 
