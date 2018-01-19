@@ -58,3 +58,5 @@ LOCAL_GENERATED_SOURCES += $(GEN)
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
 endif # TARGET_BUILD_PDK not true
+
+include $(LOCAL_PATH)/base/1.0/vts/functional/Android.mk
