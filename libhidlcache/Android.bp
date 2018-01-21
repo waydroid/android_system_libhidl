@@ -38,16 +38,17 @@ cc_library {
         "android.hidl.memory@1.0",
         "android.hidl.memory.block@1.0",
         "android.hidl.memory.token@1.0",
-        "libhidlbase"
+        "libhidlbase",
     ],
     srcs: [
         "HidlMemoryCache.cpp",
-        "mapping.cpp"
+        "MemoryDealer.cpp",
+        "mapping.cpp",
     ],
 }
 
 cc_test {
-   name: "libhidlcache_test",
+    name: "libhidlcache_test",
     defaults: ["hidl-gen-defaults"],
 
     shared_libs: [
