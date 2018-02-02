@@ -35,6 +35,11 @@ const char* kGcovPrefixEnvVar = "GCOV_PREFIX";
 const char* kGcovPrefixOverrideEnvVar = "GCOV_PREFIX_OVERRIDE";
 const char* kGcovPrefixPath = "/data/misc/trace/";
 const char* kSysPropHalCoverage = "hal.coverage.enable";
+#if defined(__LP64__)
+const char* kSysPropInstrumentationPath = "hal.instrumentation.lib.path.64";
+#else
+const char* kSysPropInstrumentationPath = "hal.instrumentation.lib.path.32";
+#endif
 #endif
 
 namespace android {
@@ -66,8 +71,8 @@ HidlInstrumentor::HidlInstrumentor(const std::string& package, const std::string
     : mEnableInstrumentation(false),
       mInstrumentationLibPackage(package),
       mInterfaceName(interface) {
-    configureInstrumentation(false);
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
+    configureInstrumentation(false);
     if (__sanitizer_cov_dump != nullptr) {
         ::android::add_sysprop_change_callback(
             []() {
@@ -115,22 +120,18 @@ HidlInstrumentor::HidlInstrumentor(const std::string& package, const std::string
 HidlInstrumentor::~HidlInstrumentor() {}
 
 void HidlInstrumentor::configureInstrumentation(bool log) {
-    bool enableInstrumentation = property_get_bool(
-            "hal.instrumentation.enable",
-            false);
-    if (enableInstrumentation != mEnableInstrumentation) {
-        mEnableInstrumentation = enableInstrumentation;
-        if (mEnableInstrumentation) {
-            if (log) {
-                LOG(INFO) << "Enable instrumentation.";
-            }
-            registerInstrumentationCallbacks (&mInstrumentationCallbacks);
-        } else {
-            if (log) {
-                LOG(INFO) << "Disable instrumentation.";
-            }
-            mInstrumentationCallbacks.clear();
+    mEnableInstrumentation = property_get_bool("hal.instrumentation.enable", false);
+    if (mEnableInstrumentation) {
+        if (log) {
+            LOG(INFO) << "Enable instrumentation.";
         }
+        mInstrumentationCallbacks.clear();
+        registerInstrumentationCallbacks(&mInstrumentationCallbacks);
+    } else {
+        if (log) {
+            LOG(INFO) << "Disable instrumentation.";
+        }
+        mInstrumentationCallbacks.clear();
     }
 }
 
@@ -139,9 +140,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
     std::vector<std::string> instrumentationLibPaths;
     char instrumentationLibPath[PROPERTY_VALUE_MAX];
-    if (property_get("hal.instrumentation.lib.path",
-                     instrumentationLibPath,
-                     "") > 0) {
+    if (property_get(kSysPropInstrumentationPath, instrumentationLibPath, "") > 0) {
         instrumentationLibPaths.push_back(instrumentationLibPath);
     } else {
         static std::string halLibPathVndkSp = android::base::StringPrintf(
