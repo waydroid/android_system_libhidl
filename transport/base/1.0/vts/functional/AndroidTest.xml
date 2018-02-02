@@ -15,6 +15,10 @@
 -->
 <configuration description="Config for VTS VtsHalBaseV1_0TargetTest test cases">
     <option name="config-descriptor:metadata" key="plan" value="vts-treble" />
+    <target_preparer class="com.android.compatibility.common.tradefed.targetprep.VtsFilePusher">
+        <option name="abort-on-push-failure" value="false"/>
+        <option name="push-group" value="HalHidlTargetTest.push"/>
+    </target_preparer>
     <multi_target_preparer class="com.android.tradefed.targetprep.VtsPythonVirtualenvPreparer" />
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
         <option name="test-module-name" value="VtsHalBaseV1_0TargetTest"/>
