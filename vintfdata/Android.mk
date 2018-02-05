@@ -30,6 +30,11 @@ endif
 
 # Device Compatibility Matrix
 ifdef DEVICE_MATRIX_FILE
+DEVICE_MATRIX_INPUT_FILE := $(DEVICE_MATRIX_FILE)
+else
+DEVICE_MATRIX_INPUT_FILE := $(LOCAL_PATH)/device_compatibility_matrix.default.xml
+endif
+
 include $(CLEAR_VARS)
 LOCAL_MODULE        := device_compatibility_matrix.xml
 LOCAL_MODULE_STEM   := compatibility_matrix.xml
@@ -39,7 +44,7 @@ LOCAL_MODULE_PATH   := $(TARGET_OUT_VENDOR)/etc/vintf
 GEN := $(local-generated-sources-dir)/compatibility_matrix.xml
 
 $(GEN): PRIVATE_VINTF_VNDK_VERSION := $(VINTF_VNDK_VERSION)
-$(GEN): $(DEVICE_MATRIX_FILE) $(HOST_OUT_EXECUTABLES)/assemble_vintf
+$(GEN): $(DEVICE_MATRIX_INPUT_FILE) $(HOST_OUT_EXECUTABLES)/assemble_vintf
 	REQUIRED_VNDK_VERSION=$(PRIVATE_VINTF_VNDK_VERSION) \
 	BOARD_SYSTEMSDK_VERSIONS="$(BOARD_SYSTEMSDK_VERSIONS)" \
 		$(HOST_OUT_EXECUTABLES)/assemble_vintf -i $< -o $@
@@ -47,7 +52,6 @@ $(GEN): $(DEVICE_MATRIX_FILE) $(HOST_OUT_EXECUTABLES)/assemble_vintf
 LOCAL_PREBUILT_MODULE_FILE := $(GEN)
 include $(BUILD_PREBUILT)
 BUILT_VENDOR_MATRIX := $(LOCAL_BUILT_MODULE)
-endif
 
 # Framework Manifest
 include $(CLEAR_VARS)
@@ -82,3 +86,4 @@ BUILT_SYSTEM_MANIFEST := $(LOCAL_BUILT_MODULE)
 
 VINTF_VNDK_VERSION :=
 FRAMEWORK_MANIFEST_INPUT_FILES :=
+DEVICE_MATRIX_INPUT_FILE :=
