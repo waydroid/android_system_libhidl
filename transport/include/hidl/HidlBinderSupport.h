@@ -332,10 +332,7 @@ sp<IBinder> toBinder(sp<IType> iface) {
         if (sBnObj == nullptr) {
             auto func = details::getBnConstructorMap().get(myDescriptor, nullptr);
             if (!func) {
-                func = details::gBnConstructorMap.get(myDescriptor, nullptr);
-                if (!func) {
-                    return nullptr;
-                }
+                return nullptr;
             }
 
             sBnObj = sp<IBinder>(func(static_cast<void*>(ifacePtr)));
