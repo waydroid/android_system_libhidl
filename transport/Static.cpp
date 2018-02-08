@@ -29,10 +29,16 @@ namespace details {
 Mutex gDefaultServiceManagerLock;
 sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
 
+// Deprecated; kept for ABI compatibility. Use getBnConstructorMap.
+BnConstructorMap gBnConstructorMap{};
+
 ConcurrentMap<const ::android::hidl::base::V1_0::IBase*, wp<::android::hardware::BHwBinder>>
     gBnMap{};
 
 ConcurrentMap<wp<::android::hidl::base::V1_0::IBase>, SchedPrio> gServicePrioMap{};
+
+// Deprecated; kept for ABI compatibility. Use getBsConstructorMap.
+BsConstructorMap gBsConstructorMap{};
 
 // For static executables, it is not guaranteed that gBnConstructorMap are initialized before
 // used in HAL definition libraries.
