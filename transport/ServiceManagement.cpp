@@ -511,12 +511,9 @@ struct Waiter : IServiceNotification {
     }
 
     ~Waiter() {
-        if (mRegisteredForNotifications) {
-            if (!mSm->unregisterForNotifications(mInterfaceName, mInstanceName, this).
-                    withDefault(false)) {
-                LOG(ERROR) << "Could not unregister service notification for "
-                    << mInterfaceName << "/" << mInstanceName << ".";
-            }
+        if (!mDoneCalled) {
+            LOG(FATAL)
+                << "Waiter still registered for notifications, call done() before dropping ref!";
         }
     }
 
@@ -567,7 +564,23 @@ struct Waiter : IServiceNotification {
         std::unique_lock<std::mutex> lock(mMutex);
         mRegistered = false;
     }
-private:
+
+    // done() must be called before dropping the last strong ref to the Waiter, to make
+    // sure we can properly unregister with hwservicemanager.
+    void done() {
+        if (mRegisteredForNotifications) {
+            if (!mSm->unregisterForNotifications(mInterfaceName, mInstanceName, this)
+                     .withDefault(false)) {
+                LOG(ERROR) << "Could not unregister service notification for " << mInterfaceName
+                           << "/" << mInstanceName << ".";
+            } else {
+                mRegisteredForNotifications = false;
+            }
+        }
+        mDoneCalled = true;
+    }
+
+   private:
     const std::string mInterfaceName;
     const std::string mInstanceName;
     const sp<IServiceManager1_1>& mSm;
@@ -575,12 +588,14 @@ private:
     std::condition_variable mCondition;
     bool mRegistered = false;
     bool mRegisteredForNotifications = false;
+    bool mDoneCalled = false;
 };
 
 void waitForHwService(
         const std::string &interface, const std::string &instanceName) {
     sp<Waiter> waiter = new Waiter(interface, instanceName, defaultServiceManager1_1());
     waiter->wait();
+    waiter->done();
 }
 
 // Prints relevant error/warning messages for error return values from
@@ -670,6 +685,7 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
                 details::canCastInterface(base.get(), descriptor.c_str(), true /* emitError */);
 
             if (canCastRet.isOk() && canCastRet) {
+                waiter->done();
                 return base; // still needs to be wrapped by Bp class.
             }
 
@@ -682,6 +698,8 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
         ALOGI("getService: Trying again for %s/%s...", descriptor.c_str(), instance.c_str());
         waiter->wait();
     }
+
+    waiter->done();
 
     if (getStub || vintfPassthru || vintfLegacy) {
         const sp<IServiceManager> pm = getPassthroughServiceManager();
