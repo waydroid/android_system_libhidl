@@ -254,6 +254,14 @@ void hidl_string::setToExternal(const char *data, size_t size) {
     if (size > UINT32_MAX) {
         LOG(FATAL) << "string size can't exceed 2^32 bytes: " << size;
     }
+
+    // When the binder driver copies this data into its buffer, it must
+    // have a zero byte there because the remote process will have a pointer
+    // directly into the read-only binder buffer. If we manually copy the
+    // data now to add a zero, then we lose the efficiency of this method.
+    // Checking here (it's also checked in the parceling code later).
+    CHECK(data[size] == '\0');
+
     clear();
 
     mBuffer = data;
