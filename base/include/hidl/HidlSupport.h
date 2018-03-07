@@ -155,6 +155,8 @@ struct hidl_string {
     // Reference an external char array. Ownership is _not_ transferred.
     // Caller is responsible for ensuring that underlying memory is valid
     // for the lifetime of this hidl_string.
+    //
+    // size == strlen(data)
     void setToExternal(const char *data, size_t size);
 
     // offsetof(hidl_string, mBuffer) exposed since mBuffer is private.
