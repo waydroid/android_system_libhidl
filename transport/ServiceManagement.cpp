@@ -635,6 +635,7 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
     using Transport = ::android::hidl::manager::V1_0::IServiceManager::Transport;
     using ::android::hidl::base::V1_0::IBase;
     using ::android::hidl::manager::V1_0::IServiceManager;
+    sp<Waiter> waiter;
 
     const sp<IServiceManager1_1> sm = defaultServiceManager1_1();
     if (sm == nullptr) {
@@ -670,8 +671,10 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
     const bool vintfLegacy = (transport == Transport::EMPTY);
 #endif  // ENFORCE_VINTF_MANIFEST
 
-    sp<Waiter> waiter = new Waiter(descriptor, instance, sm);
     while (!getStub && (vintfHwbinder || vintfLegacy)) {
+        if (waiter == nullptr) {
+            waiter = new Waiter(descriptor, instance, sm);
+        }
         waiter->reset(); // don't reorder this -- see comments on reset()
         Return<sp<IBase>> ret = sm->get(descriptor, instance);
         if (!ret.isOk()) {
@@ -699,7 +702,9 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
         waiter->wait();
     }
 
-    waiter->done();
+    if (waiter != nullptr) {
+        waiter->done();
+    }
 
     if (getStub || vintfPassthru || vintfLegacy) {
         const sp<IServiceManager> pm = getPassthroughServiceManager();
