@@ -30,6 +30,7 @@
 
 #include <hidl/HidlBinderSupport.h>
 #include <hidl/HidlInternal.h>
+#include <hidl/HidlTransportUtils.h>
 #include <hidl/ServiceManagement.h>
 #include <hidl/Status.h>
 
@@ -357,7 +358,12 @@ struct PassthroughServiceManager : IServiceManager1_1 {
                 return true; // this module doesn't provide this instance name
             }
 
-            registerReference(fqName, name);
+            // Actual fqname might be a subclass.
+            // This assumption is tested in vts_treble_vintf_test
+            using ::android::hardware::details::getDescriptor;
+            std::string actualFqName = getDescriptor(ret.get());
+            CHECK(actualFqName.size() > 0);
+            registerReference(actualFqName, name);
             return false;
         });
 
