@@ -30,7 +30,6 @@ Mutex gDefaultServiceManagerLock;
 sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
 
 // Deprecated; kept for ABI compatibility. Use getBnConstructorMap.
-// TODO(b/69122224) remove once prebuilts are updated.
 BnConstructorMap gBnConstructorMap{};
 
 ConcurrentMap<const ::android::hidl::base::V1_0::IBase*, wp<::android::hardware::BHwBinder>>
@@ -39,7 +38,6 @@ ConcurrentMap<const ::android::hidl::base::V1_0::IBase*, wp<::android::hardware:
 ConcurrentMap<wp<::android::hidl::base::V1_0::IBase>, SchedPrio> gServicePrioMap{};
 
 // Deprecated; kept for ABI compatibility. Use getBsConstructorMap.
-// TODO(b/69122224) remove once prebuilts are updated.
 BsConstructorMap gBsConstructorMap{};
 
 // For static executables, it is not guaranteed that gBnConstructorMap are initialized before
