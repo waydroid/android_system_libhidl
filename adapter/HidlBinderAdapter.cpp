@@ -38,18 +38,26 @@ const static std::string kDeactivateProp = "test.hidl.adapters.deactivated";
 
 int usage(const std::string& me) {
     std::cerr << "usage: " << me
-              << " [-p] [-n instance-name] interface-name instance-name number-of-threads."
+              << " [-p|P] [-n instance-name] interface-name instance-name number-of-threads."
               << std::endl;
     std::cerr << "    -p: stop based on property " << kDeactivateProp << "and reset it."
               << std::endl;
+    std::cerr << "    -P: stop based on interface specific property " << kDeactivateProp
+              << ".<fq-name>.<instance-name>" << std::endl;
     std::cerr
         << "    -n instance-name: register as a different instance name (does not de-register)"
         << std::endl;
     return EINVAL;
 }
 
+enum class StopMethod {
+    NONE,
+    ALL,
+    SPECIFIC,
+};
+
 struct Args {
-    bool propertyStop = false;
+    StopMethod stopMethod = StopMethod::NONE;
     std::string interface;     // e.x. IFoo
     std::string instanceName;  // e.x. default
     int threadNumber;
@@ -58,10 +66,14 @@ struct Args {
 
 bool processArguments(int argc, char** argv, Args* args) {
     int c;
-    while ((c = getopt(argc, argv, "pn:")) != -1) {
+    while ((c = getopt(argc, argv, "pPn:")) != -1) {
         switch (c) {
             case 'p': {
-                args->propertyStop = true;
+                args->stopMethod = StopMethod::ALL;
+                break;
+            }
+            case 'P': {
+                args->stopMethod = StopMethod::SPECIFIC;
                 break;
             }
             case 'n': {
@@ -100,17 +112,16 @@ bool processArguments(int argc, char** argv, Args* args) {
 }
 
 // only applies for -p argument
-void waitForAdaptersDeactivated() {
+void waitForAdaptersDeactivated(const std::string& property) {
     using std::literals::chrono_literals::operator""s;
 
-    while (!WaitForProperty(kDeactivateProp, "true", 30s)) {
+    while (!WaitForProperty(property, "true", 30s)) {
         // Log this so that when using this option on testing devices, there is
         // a clear indication if adapters are not properly stopped
-        LOG(WARNING) << "Adapter use in progress. Waiting for stop based on 'true' "
-                     << kDeactivateProp;
+        LOG(WARNING) << "Adapter use in progress. Waiting for stop based on 'true' " << property;
     }
 
-    SetProperty(kDeactivateProp, "false");
+    SetProperty(property, "false");
 }
 
 int adapterMain(const std::string& package, int argc, char** argv,
@@ -163,12 +174,24 @@ int adapterMain(const std::string& package, int argc, char** argv,
         return 1;
     }
 
-    if (args.propertyStop) {
-        std::cout << "Set " << kDeactivateProp << " to true to deactivate." << std::endl;
-        waitForAdaptersDeactivated();
-    } else {
-        std::cout << "Press any key to disassociate adapter." << std::endl;
-        getchar();
+    switch (args.stopMethod) {
+        case StopMethod::NONE: {
+            std::cout << "Press any key to disassociate adapter." << std::endl;
+            getchar();
+            break;
+        };
+        case StopMethod::SPECIFIC: {
+            const std::string property =
+                kDeactivateProp + "." + interfaceName + "." + args.registerInstanceName;
+            std::cout << "Set " << property << " to true to deactivate." << std::endl;
+            waitForAdaptersDeactivated(property);
+            break;
+        };
+        case StopMethod::ALL: {
+            std::cout << "Set " << kDeactivateProp << " to true to deactivate." << std::endl;
+            waitForAdaptersDeactivated(kDeactivateProp);
+            break;
+        };
     }
 
     // automatically unregistered on process exit if it is a new instance name
