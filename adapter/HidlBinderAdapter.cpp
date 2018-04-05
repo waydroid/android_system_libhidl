@@ -36,27 +36,53 @@ using android::base::WaitForProperty;
 
 const static std::string kDeactivateProp = "test.hidl.adapters.deactivated";
 
-void usage(const std::string& me) {
+int usage(const std::string& me) {
     std::cerr << "usage: " << me << " [-p] interface-name instance-name number-of-threads."
               << std::endl;
     std::cerr << "    -p: stop based on property " << kDeactivateProp << "and reset it."
               << std::endl;
+    return EINVAL;
 }
 
-bool processArguments(int* argc, char*** argv, bool* propertyStop) {
+struct Args {
+    bool propertyStop = false;
+    std::string interface;     // e.x. IFoo
+    std::string instanceName;  // e.x. default
+    int threadNumber;
+};
+
+bool processArguments(int argc, char** argv, Args* args) {
     int c;
-    while ((c = getopt(*argc, *argv, "p")) != -1) {
+    while ((c = getopt(argc, argv, "p")) != -1) {
         switch (c) {
             case 'p': {
-                *propertyStop = true;
+                args->propertyStop = true;
                 break;
             }
             default: { return false; }
         }
     }
 
-    *argc -= optind;
-    *argv += optind;
+    argc -= optind;
+    argv += optind;
+
+    if (argc != 3) {
+        std::cerr << "ERROR: requires exactly three positional arguments for "
+                     "interface, instance name, and number of threads, but "
+                  << argc << " provided." << std::endl;
+        return false;
+    }
+
+    args->interface = argv[0];
+    args->instanceName = argv[1];
+    args->threadNumber = std::stoi(argv[2]);
+
+    if (args->threadNumber <= 0) {
+        std::cerr << "ERROR: invalid thread number " << args->threadNumber
+                  << " must be a positive integer." << std::endl;
+        return false;
+    }
+
     return true;
 }
 
@@ -82,25 +108,12 @@ int adapterMain(const std::string& package, int argc, char** argv,
 
     const std::string& me = argc > 0 ? argv[0] : "(error)";
 
-    bool propertyStop = false;
-    if (!processArguments(&argc, &argv, &propertyStop)) {
-        usage(me);
-        return EINVAL;
+    Args args;
+    if (!processArguments(argc, argv, &args)) {
+        return usage(me);
     }
 
-    if (argc != 3) {
-        usage(me);
-        return EINVAL;
-    }
-
-    std::string interfaceName = package + "::" + argv[0];
-    std::string instanceName = argv[1];
-    int threadNumber = std::stoi(argv[2]);
-
-    if (threadNumber <= 0) {
-        std::cerr << "ERROR: invalid thread number " << threadNumber
-                  << " must be a positive integer.";
-    }
+    std::string interfaceName = package + "::" + args.interface;
 
     auto it = adapters.find(interfaceName);
     if (it == adapters.end()) {
@@ -108,9 +121,9 @@ int adapterMain(const std::string& package, int argc, char** argv,
         return 1;
     }
 
-    std::cout << "Trying to adapt down " << interfaceName << "/" << instanceName << std::endl;
+    std::cout << "Trying to adapt down " << interfaceName << "/" << args.instanceName << std::endl;
 
-    configureRpcThreadpool(threadNumber, false /* callerWillJoin */);
+    configureRpcThreadpool(args.threadNumber, false /* callerWillJoin */);
 
     sp<IServiceManager> manager = IServiceManager::getService();
     if (manager == nullptr) {
@@ -118,7 +131,7 @@ int adapterMain(const std::string& package, int argc, char** argv,
         return 1;
     }
 
-    sp<IBase> implementation = manager->get(interfaceName, instanceName).withDefault(nullptr);
+    sp<IBase> implementation = manager->get(interfaceName, args.instanceName).withDefault(nullptr);
     if (implementation == nullptr) {
         std::cerr << "ERROR: could not retrieve desired implementation" << std::endl;
         return 1;
@@ -130,13 +143,13 @@ int adapterMain(const std::string& package, int argc, char** argv,
         return 1;
     }
 
-    bool replaced = manager->add(instanceName, adapter).withDefault(false);
+    bool replaced = manager->add(args.instanceName, adapter).withDefault(false);
     if (!replaced) {
         std::cerr << "ERROR: could not register the service with the service manager." << std::endl;
         return 1;
     }
 
-    if (propertyStop) {
+    if (args.propertyStop) {
         std::cout << "Set " << kDeactivateProp << " to true to deactivate." << std::endl;
         waitForAdaptersDeactivated();
     } else {
@@ -144,7 +157,7 @@ int adapterMain(const std::string& package, int argc, char** argv,
         getchar();
     }
 
-    bool restored = manager->add(instanceName, implementation).withDefault(false);
+    bool restored = manager->add(args.instanceName, implementation).withDefault(false);
     if (!restored) {
         std::cerr << "ERROR: could not re-register interface with the service manager."
                   << std::endl;
