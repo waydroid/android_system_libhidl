@@ -37,10 +37,14 @@ using android::base::WaitForProperty;
 const static std::string kDeactivateProp = "test.hidl.adapters.deactivated";
 
 int usage(const std::string& me) {
-    std::cerr << "usage: " << me << " [-p] interface-name instance-name number-of-threads."
+    std::cerr << "usage: " << me
+              << " [-p] [-n instance-name] interface-name instance-name number-of-threads."
               << std::endl;
     std::cerr << "    -p: stop based on property " << kDeactivateProp << "and reset it."
               << std::endl;
+    std::cerr
+        << "    -n instance-name: register as a different instance name (does not de-register)"
+        << std::endl;
     return EINVAL;
 }
 
@@ -49,14 +53,19 @@ struct Args {
     std::string interface;     // e.x. IFoo
     std::string instanceName;  // e.x. default
     int threadNumber;
+    std::string registerInstanceName;  // e.x. default
 };
 
 bool processArguments(int argc, char** argv, Args* args) {
     int c;
-    while ((c = getopt(argc, argv, "p")) != -1) {
+    while ((c = getopt(argc, argv, "pn:")) != -1) {
         switch (c) {
             case 'p': {
                 args->propertyStop = true;
+                break;
+            }
+            case 'n': {
+                args->registerInstanceName = optarg;
                 break;
             }
             default: { return false; }
@@ -81,6 +90,10 @@ bool processArguments(int argc, char** argv, Args* args) {
         std::cerr << "ERROR: invalid thread number " << args->threadNumber
                   << " must be a positive integer." << std::endl;
         return false;
+    }
+
+    if (args->registerInstanceName.empty()) {
+        args->registerInstanceName = args->instanceName;
     }
 
     return true;
@@ -121,7 +134,8 @@ int adapterMain(const std::string& package, int argc, char** argv,
         return 1;
     }
 
-    std::cout << "Trying to adapt down " << interfaceName << "/" << args.instanceName << std::endl;
+    std::cout << "Trying to adapt down " << interfaceName << "/" << args.instanceName << " to "
+              << args.registerInstanceName << std::endl;
 
     configureRpcThreadpool(args.threadNumber, false /* callerWillJoin */);
 
@@ -143,7 +157,7 @@ int adapterMain(const std::string& package, int argc, char** argv,
         return 1;
     }
 
-    bool replaced = manager->add(args.instanceName, adapter).withDefault(false);
+    bool replaced = manager->add(args.registerInstanceName, adapter).withDefault(false);
     if (!replaced) {
         std::cerr << "ERROR: could not register the service with the service manager." << std::endl;
         return 1;
@@ -157,11 +171,14 @@ int adapterMain(const std::string& package, int argc, char** argv,
         getchar();
     }
 
-    bool restored = manager->add(args.instanceName, implementation).withDefault(false);
-    if (!restored) {
-        std::cerr << "ERROR: could not re-register interface with the service manager."
-                  << std::endl;
-        return 1;
+    // automatically unregistered on process exit if it is a new instance name
+    if (args.registerInstanceName == args.instanceName) {
+        bool restored = manager->add(args.instanceName, implementation).withDefault(false);
+        if (!restored) {
+            std::cerr << "ERROR: could not re-register interface with the service manager."
+                      << std::endl;
+            return 1;
+        }
     }
 
     std::cout << "Success." << std::endl;
