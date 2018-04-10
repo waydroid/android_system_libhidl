@@ -101,29 +101,55 @@ std::string binaryName() {
     return cmdline;
 }
 
-void tryShortenProcessName(const std::string &packageName) {
+std::string packageWithoutVersion(const std::string& packageAndVersion) {
+    size_t at = packageAndVersion.find('@');
+    if (at == std::string::npos) return packageAndVersion;
+    return packageAndVersion.substr(0, at);
+}
+
+void tryShortenProcessName(const std::string& packageAndVersion) {
+    const static std::string kTasks = "/proc/self/task/";
+
+    // make sure that this binary name is in the same package
     std::string processName = binaryName();
 
-    if (!startsWith(processName, packageName)) {
+    // e.x. android.hardware.foo is this package
+    if (!startsWith(packageWithoutVersion(processName), packageWithoutVersion(packageAndVersion))) {
         return;
     }
 
-    // e.x. android.hardware.module.foo@1.0 -> foo@1.0
-    size_t lastDot = packageName.rfind('.');
-    size_t secondDot = packageName.rfind('.', lastDot - 1);
+    // e.x. android.hardware.module.foo@1.2 -> foo@1.2
+    size_t lastDot = packageAndVersion.rfind('.');
+    if (lastDot == std::string::npos) return;
+    size_t secondDot = packageAndVersion.rfind('.', lastDot - 1);
+    if (secondDot == std::string::npos) return;
 
-    if (secondDot == std::string::npos) {
-        return;
+    std::string newName = processName.substr(secondDot + 1, std::string::npos);
+    ALOGI("Removing namespace from process name %s to %s.", processName.c_str(), newName.c_str());
+
+    std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(kTasks.c_str()), closedir);
+    if (dir == nullptr) return;
+
+    dirent* dp;
+    while ((dp = readdir(dir.get())) != nullptr) {
+        if (dp->d_type != DT_DIR) continue;
+        if (dp->d_name[0] == '.') continue;
+
+        std::fstream fs(kTasks + dp->d_name + "/comm");
+        if (!fs.is_open()) {
+            ALOGI("Could not rename process, failed read comm for %s.", dp->d_name);
+            continue;
+        }
+
+        std::string oldComm;
+        fs >> oldComm;
+
+        // don't rename if it already has an explicit name
+        if (startsWith(packageAndVersion, oldComm)) {
+            fs.seekg(0, fs.beg);
+            fs << newName;
+        }
     }
-
-    std::string newName = processName.substr(secondDot + 1,
-            16 /* TASK_COMM_LEN */ - 1);
-    ALOGI("Removing namespace from process name %s to %s.",
-            processName.c_str(), newName.c_str());
-
-    int rc = pthread_setname_np(pthread_self(), newName.c_str());
-    ALOGI_IF(rc != 0, "Removing namespace from process name %s failed.",
-            processName.c_str());
 }
 
 namespace details {
