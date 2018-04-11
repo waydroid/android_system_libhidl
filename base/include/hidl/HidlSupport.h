@@ -40,18 +40,22 @@ namespace android {
 namespace hidl {
 namespace memory {
 namespace V1_0 {
-    struct IMemory;
-}; // namespace V1_0
-}; // namespace manager
-}; // namespace hidl
+
+struct IMemory;
+
+}  // namespace V1_0
+}  // namespace memory
+}  // namespace hidl
 
 namespace hidl {
 namespace base {
 namespace V1_0 {
-    struct IBase;
-}; // namespace V1_0
-}; // namespace base
-}; // namespace hidl
+
+struct IBase;
+
+}  // namespace V1_0
+}  // namespace base
+}  // namespace hidl
 
 namespace hardware {
 
