@@ -703,11 +703,13 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
     const bool vintfLegacy = (transport == Transport::EMPTY);
 #endif  // ENFORCE_VINTF_MANIFEST
 
-    while (!getStub && (vintfHwbinder || vintfLegacy)) {
-        if (waiter == nullptr) {
+    for (int tries = 0; !getStub && (vintfHwbinder || vintfLegacy); tries++) {
+        if (waiter == nullptr && tries > 0) {
             waiter = new Waiter(descriptor, instance, sm);
         }
-        waiter->reset(); // don't reorder this -- see comments on reset()
+        if (waiter != nullptr) {
+            waiter->reset();  // don't reorder this -- see comments on reset()
+        }
         Return<sp<IBase>> ret = sm->get(descriptor, instance);
         if (!ret.isOk()) {
             ALOGE("getService: defaultServiceManager()->get returns %s for %s/%s.",
@@ -720,7 +722,9 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
                 details::canCastInterface(base.get(), descriptor.c_str(), true /* emitError */);
 
             if (canCastRet.isOk() && canCastRet) {
-                waiter->done();
+                if (waiter != nullptr) {
+                    waiter->done();
+                }
                 return base; // still needs to be wrapped by Bp class.
             }
 
@@ -730,8 +734,10 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
         // In case of legacy or we were not asked to retry, don't.
         if (vintfLegacy || !retry) break;
 
-        ALOGI("getService: Trying again for %s/%s...", descriptor.c_str(), instance.c_str());
-        waiter->wait();
+        if (waiter != nullptr) {
+            ALOGI("getService: Trying again for %s/%s...", descriptor.c_str(), instance.c_str());
+            waiter->wait();
+        }
     }
 
     if (waiter != nullptr) {
