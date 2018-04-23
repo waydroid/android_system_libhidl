@@ -17,6 +17,9 @@
 // All static variables go here, to control initialization and
 // destruction order in the library.
 
+#ifndef ANDROID_HARDWARE_HIDL_STATIC_H
+#define ANDROID_HARDWARE_HIDL_STATIC_H
+
 #include <functional>
 
 #include <android/hidl/base/1.0/IBase.h>
@@ -59,3 +62,5 @@ BsConstructorMap& getBsConstructorMap();
 }  // namespace details
 }  // namespace hardware
 }  // namespace android
+
+#endif
