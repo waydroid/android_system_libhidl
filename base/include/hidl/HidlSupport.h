@@ -993,17 +993,15 @@ std::string toString(const hidl_array<T, SIZE1, SIZE2, SIZES...> &a) {
  * Every HIDL generated enum generates an implementation of this function.
  * E.x.: for(const auto v : hidl_enum_range<Enum>) { ... }
  */
-template <typename>
+template <typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
 struct hidl_enum_range;
 
-/**
- * Deprecated
- *
- * TODO(b/78573628): remove. This type is technically not an iterator but
- *     is a range/iterable type.
- */
-template <typename T>
-using hidl_enum_iterator = hidl_enum_range<T>;
+template <typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
+struct hidl_enum_iterator {
+    static_assert(!std::is_enum<T>::value,
+                  "b/78573628: hidl_enum_iterator was renamed to hidl_enum_range because it is not "
+                  "actually an iterator. Please use that type instead.");
+};
 
 /**
  * Bitfields in HIDL are the underlying type of the enumeration.
