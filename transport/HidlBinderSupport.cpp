@@ -219,5 +219,9 @@ status_t handleBinderPoll() {
     return IPCThreadState::self()->handlePolledCommands();
 }
 
+void addPostCommandTask(const std::function<void(void)> task) {
+    IPCThreadState::self()->addPostCommandTask(task);
+}
+
 }  // namespace hardware
 }  // namespace android
