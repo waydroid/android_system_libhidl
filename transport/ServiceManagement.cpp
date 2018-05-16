@@ -563,7 +563,7 @@ struct Waiter : IServiceNotification {
         return Void();
     }
 
-    void wait() {
+    void wait(bool timeout) {
         using std::literals::chrono_literals::operator""s;
 
         if (!mRegisteredForNotifications) {
@@ -574,7 +574,7 @@ struct Waiter : IServiceNotification {
         }
 
         std::unique_lock<std::mutex> lock(mMutex);
-        while(true) {
+        do {
             mCondition.wait_for(lock, 1s, [this]{
                 return mRegistered;
             });
@@ -583,9 +583,8 @@ struct Waiter : IServiceNotification {
                 break;
             }
 
-            LOG(WARNING) << "Waited one second for " << mInterfaceName << "/" << mInstanceName
-                         << ". Waiting another...";
-        }
+            LOG(WARNING) << "Waited one second for " << mInterfaceName << "/" << mInstanceName;
+        } while (!timeout);
     }
 
     // Be careful when using this; after calling reset(), you must always try to retrieve
@@ -626,7 +625,7 @@ struct Waiter : IServiceNotification {
 void waitForHwService(
         const std::string &interface, const std::string &instanceName) {
     sp<Waiter> waiter = new Waiter(interface, instanceName, defaultServiceManager1_1());
-    waiter->wait();
+    waiter->wait(false /* timeout */);
     waiter->done();
 }
 
@@ -736,7 +735,7 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
 
         if (waiter != nullptr) {
             ALOGI("getService: Trying again for %s/%s...", descriptor.c_str(), instance.c_str());
-            waiter->wait();
+            waiter->wait(true /* timeout */);
         }
     }
 
