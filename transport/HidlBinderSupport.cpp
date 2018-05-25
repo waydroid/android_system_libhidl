@@ -196,11 +196,21 @@ status_t writeToParcel(const Status &s, Parcel* parcel) {
     return status;
 }
 
+static bool gThreadPoolConfigured = false;
+
 void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
-    ProcessState::self()->setThreadPoolConfiguration(maxThreads, callerWillJoin /*callerJoinsPool*/);
+    status_t ret = ProcessState::self()->setThreadPoolConfiguration(
+        maxThreads, callerWillJoin /*callerJoinsPool*/);
+    LOG_ALWAYS_FATAL_IF(ret != OK, "Could not setThreadPoolConfiguration: %d", ret);
+
+    gThreadPoolConfigured = true;
 }
 
 void joinBinderRpcThreadpool() {
+    if (!gThreadPoolConfigured) {
+        ALOGE("HIDL joinRpcThreadpool without calling configureRpcThreadPool.");
+    }
+
     IPCThreadState::self()->joinThreadPool();
 }
 
