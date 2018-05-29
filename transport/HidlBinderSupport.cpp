@@ -207,10 +207,8 @@ void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
 }
 
 void joinBinderRpcThreadpool() {
-    if (!gThreadPoolConfigured) {
-        ALOGE("HIDL joinRpcThreadpool without calling configureRpcThreadPool.");
-    }
-
+    LOG_ALWAYS_FATAL_IF(!gThreadPoolConfigured,
+                        "HIDL joinRpcThreadpool without calling configureRpcThreadPool.");
     IPCThreadState::self()->joinThreadPool();
 }
 
@@ -218,9 +216,7 @@ int setupBinderPolling() {
     int fd;
     int err = IPCThreadState::self()->setupPolling(&fd);
 
-    if (err != OK) {
-        ALOGE("Failed to setup binder polling: %d (%s)", err, strerror(err));
-    }
+    LOG_ALWAYS_FATAL_IF(err != OK, "Failed to setup binder polling: %d (%s)", err, strerror(err));
 
     return err == OK ? fd : -1;
 }
