@@ -1,0 +1,30 @@
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package android.hidl.manager@1.2;
+
+import @1.1::IServiceManager;
+
+interface IServiceManager extends @1.1::IServiceManager {
+    // TODO(b/66921961): additional functionality for the next release:
+    // - Better notifications (onRegistration will contain the interface)
+    // - Remove service (for b/64678982, lazy HALs)
+    // - Callbacks to support lazy hal shutdown when there are no clients (b/79983843)
+    // - Method to list interfaces in the manifest (for b/76108617, since if they are
+    //     lazy, they will no longer show up in listByInterface)
+    // - Broadcast to all HALs for systrace w/o root (b/78136428)
+    // - Register w/o it having to call interface chain (b/36424585)
+};
