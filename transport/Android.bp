@@ -19,6 +19,7 @@ hidl_package_root {
 
 cc_library {
     name: "libhidltransport",
+    recovery_available: true,
     vendor_available: true,
     vndk: {
         enabled: true,
@@ -78,6 +79,12 @@ cc_library {
         },
         enforce_vintf_manifest: {
             cflags: ["-DENFORCE_VINTF_MANIFEST"]
+        },
+    },
+
+    target: {
+        recovery: {
+            exclude_shared_libs: ["libvndksupport"],
         },
     },
 }
