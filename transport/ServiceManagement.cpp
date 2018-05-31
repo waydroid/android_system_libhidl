@@ -41,9 +41,9 @@
 #include <hwbinder/Parcel.h>
 #include <vndksupport/linker.h>
 
-#include <android/hidl/manager/1.1/IServiceManager.h>
-#include <android/hidl/manager/1.1/BpHwServiceManager.h>
-#include <android/hidl/manager/1.1/BnHwServiceManager.h>
+#include <android/hidl/manager/1.2/BnHwServiceManager.h>
+#include <android/hidl/manager/1.2/BpHwServiceManager.h>
+#include <android/hidl/manager/1.2/IServiceManager.h>
 
 #define RE_COMPONENT    "[a-zA-Z_][a-zA-Z_0-9]*"
 #define RE_PATH         RE_COMPONENT "(?:[.]" RE_COMPONENT ")*"
@@ -53,17 +53,11 @@ using android::base::WaitForProperty;
 
 using IServiceManager1_0 = android::hidl::manager::V1_0::IServiceManager;
 using IServiceManager1_1 = android::hidl::manager::V1_1::IServiceManager;
+using IServiceManager1_2 = android::hidl::manager::V1_2::IServiceManager;
 using android::hidl::manager::V1_0::IServiceNotification;
-using android::hidl::manager::V1_1::BpHwServiceManager;
-using android::hidl::manager::V1_1::BnHwServiceManager;
 
 namespace android {
 namespace hardware {
-
-namespace details {
-extern Mutex gDefaultServiceManagerLock;
-extern sp<android::hidl::manager::V1_1::IServiceManager> gDefaultServiceManager;
-}  // namespace details
 
 static const char* kHwServicemanagerReadyProperty = "hwservicemanager.ready";
 
@@ -163,13 +157,22 @@ void onRegistration(const std::string &packageName,
 }  // details
 
 sp<IServiceManager1_0> defaultServiceManager() {
-    return defaultServiceManager1_1();
+    return defaultServiceManager1_2();
 }
 sp<IServiceManager1_1> defaultServiceManager1_1() {
+    return defaultServiceManager1_2();
+}
+sp<IServiceManager1_2> defaultServiceManager1_2() {
+    using android::hidl::manager::V1_2::BnHwServiceManager;
+    using android::hidl::manager::V1_2::BpHwServiceManager;
+
+    static std::mutex gDefaultServiceManagerLock;
+    static sp<IServiceManager1_2> gDefaultServiceManager;
+
     {
-        AutoMutex _l(details::gDefaultServiceManagerLock);
-        if (details::gDefaultServiceManager != nullptr) {
-            return details::gDefaultServiceManager;
+        std::lock_guard<std::mutex> _l(gDefaultServiceManagerLock);
+        if (gDefaultServiceManager != nullptr) {
+            return gDefaultServiceManager;
         }
 
         if (access("/dev/hwbinder", F_OK|R_OK|W_OK) != 0) {
@@ -180,18 +183,18 @@ sp<IServiceManager1_1> defaultServiceManager1_1() {
 
         waitForHwServiceManager();
 
-        while (details::gDefaultServiceManager == nullptr) {
-            details::gDefaultServiceManager =
-                    fromBinder<IServiceManager1_1, BpHwServiceManager, BnHwServiceManager>(
-                        ProcessState::self()->getContextObject(nullptr));
-            if (details::gDefaultServiceManager == nullptr) {
+        while (gDefaultServiceManager == nullptr) {
+            gDefaultServiceManager =
+                fromBinder<IServiceManager1_2, BpHwServiceManager, BnHwServiceManager>(
+                    ProcessState::self()->getContextObject(nullptr));
+            if (gDefaultServiceManager == nullptr) {
                 LOG(ERROR) << "Waited for hwservicemanager, but got nullptr.";
                 sleep(1);
             }
         }
     }
 
-    return details::gDefaultServiceManager;
+    return gDefaultServiceManager;
 }
 
 std::vector<std::string> search(const std::string &path,

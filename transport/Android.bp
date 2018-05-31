@@ -47,16 +47,19 @@ cc_library {
     generated_sources: [
         "android.hidl.manager@1.0_genc++",
         "android.hidl.manager@1.1_genc++",
+        "android.hidl.manager@1.2_genc++",
         "android.hidl.base@1.0_genc++"
     ],
     generated_headers: [
         "android.hidl.manager@1.0_genc++_headers",
         "android.hidl.manager@1.1_genc++_headers",
+        "android.hidl.manager@1.2_genc++_headers",
         "android.hidl.base@1.0_genc++_headers"
     ],
     export_generated_headers: [
         "android.hidl.manager@1.0_genc++_headers",
         "android.hidl.manager@1.1_genc++_headers",
+        "android.hidl.manager@1.2_genc++_headers",
         "android.hidl.base@1.0_genc++_headers"
     ],
 

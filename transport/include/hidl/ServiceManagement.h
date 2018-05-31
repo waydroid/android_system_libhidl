@@ -28,12 +28,15 @@ namespace hidl {
 namespace manager {
 namespace V1_0 {
     struct IServiceManager;
-}; // namespace V1_0
+};  // namespace V1_0
 namespace V1_1 {
-    struct IServiceManager;
-}; // namespace V1_0
-}; // namespace manager
-}; // namespace hidl
+struct IServiceManager;
+};  // namespace V1_1
+namespace V1_2 {
+struct IServiceManager;
+};  // namespace V1_2
+};  // namespace manager
+};  // namespace hidl
 
 namespace hardware {
 
@@ -64,6 +67,7 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
 // of an interface, the best way to do this is by calling IFoo::getService()
 sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
 sp<::android::hidl::manager::V1_1::IServiceManager> defaultServiceManager1_1();
+sp<::android::hidl::manager::V1_2::IServiceManager> defaultServiceManager1_2();
 sp<::android::hidl::manager::V1_0::IServiceManager> getPassthroughServiceManager();
 sp<::android::hidl::manager::V1_1::IServiceManager> getPassthroughServiceManager1_1();
 
