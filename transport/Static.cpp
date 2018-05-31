@@ -26,9 +26,6 @@ namespace android {
 namespace hardware {
 namespace details {
 
-Mutex gDefaultServiceManagerLock;
-sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
-
 // Deprecated; kept for ABI compatibility. Use getBnConstructorMap.
 BnConstructorMap gBnConstructorMap{};
 
