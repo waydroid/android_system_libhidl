@@ -760,7 +760,7 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
     return nullptr;
 }
 
-}; // namespace details
+} // namespace details
 
-}; // namespace hardware
-}; // namespace android
+} // namespace hardware
+} // namespace android

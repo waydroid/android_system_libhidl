@@ -31,9 +31,9 @@ using IMemory = ::android::hidl::memory::V1_0::IMemory;
 class IMemoryDecorator : public virtual IMemory {
    public:
     IMemoryDecorator(sp<IMemory> heap) : mHeap(heap) {}
-    virtual ~IMemoryDecorator(){};
+    virtual ~IMemoryDecorator(){}
     Return<void> update() override { return mHeap->update(); }
-    Return<void> read() override { return mHeap->read(); };
+    Return<void> read() override { return mHeap->read(); }
     Return<void> updateRange(uint64_t start, uint64_t length) override {
         return mHeap->updateRange(start, length);
     }
