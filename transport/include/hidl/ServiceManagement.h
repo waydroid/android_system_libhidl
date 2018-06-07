@@ -28,15 +28,15 @@ namespace hidl {
 namespace manager {
 namespace V1_0 {
     struct IServiceManager;
-};  // namespace V1_0
+}  // namespace V1_0
 namespace V1_1 {
 struct IServiceManager;
-};  // namespace V1_1
+}  // namespace V1_1
 namespace V1_2 {
 struct IServiceManager;
-};  // namespace V1_2
-};  // namespace manager
-};  // namespace hidl
+}  // namespace V1_2
+}  // namespace manager
+}  // namespace hidl
 
 namespace hardware {
 
@@ -61,7 +61,7 @@ void preloadPassthroughService(const std::string &descriptor);
 sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& descriptor,
                                                              const std::string& instance,
                                                              bool retry, bool getStub);
-};
+}
 
 // These functions are for internal use by hidl. If you want to get ahold
 // of an interface, the best way to do this is by calling IFoo::getService()
@@ -82,8 +82,8 @@ static inline void preloadPassthroughService() {
     details::preloadPassthroughService(I::descriptor);
 }
 
-}; // namespace hardware
-}; // namespace android
+} // namespace hardware
+} // namespace android
 
 #endif // ANDROID_HARDWARE_ISERVICE_MANAGER_H
 
