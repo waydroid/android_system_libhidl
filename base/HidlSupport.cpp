@@ -315,9 +315,7 @@ HidlMemory::HidlMemory(const hidl_string& name, hidl_handle&& handle, size_t siz
         : hidl_memory(name, std::move(handle), size) {}
 
 // it's required to have at least one out-of-line method to avoid weak vtable
-HidlMemory::~HidlMemory() {
-    hidl_memory::~hidl_memory();
-}
+HidlMemory::~HidlMemory() {}
 
 }  // namespace hardware
 }  // namespace android
