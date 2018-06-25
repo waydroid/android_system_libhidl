@@ -390,12 +390,15 @@ TEST_F(LibHidlTest, HidlVersionTest) {
     hidl_version v3_0b{3,0};
 
     EXPECT_TRUE(v1_0 < v2_0);
+    EXPECT_TRUE(v1_0 != v2_0);
     EXPECT_TRUE(v2_0 < v2_1);
     EXPECT_TRUE(v2_1 < v3_0);
     EXPECT_TRUE(v2_0 > v1_0);
+    EXPECT_TRUE(v2_0 != v1_0);
     EXPECT_TRUE(v2_1 > v2_0);
     EXPECT_TRUE(v3_0 > v2_1);
     EXPECT_TRUE(v3_0 == v3_0b);
+    EXPECT_FALSE(v3_0 != v3_0b);
     EXPECT_TRUE(v3_0 <= v3_0b);
     EXPECT_TRUE(v2_2 <= v3_0);
     EXPECT_TRUE(v3_0 >= v3_0b);
