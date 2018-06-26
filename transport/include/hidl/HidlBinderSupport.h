@@ -301,6 +301,10 @@ static status_t writeReferenceToParcel(
 
 // ---------------------- support for casting interfaces
 
+// Constructs a binder for this interface and caches it. If it has already been created
+// then it returns it. ifacePtr must be a local object.
+sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr);
+
 // Construct a smallest possible binder from the given interface.
 // If it is remote, then its remote() will be retrieved.
 // Otherwise, the smallest possible BnChild is found where IChild is a subclass of IType
@@ -317,35 +321,7 @@ sp<IBinder> toBinder(sp<IType> iface) {
         return ::android::hardware::IInterface::asBinder(
             static_cast<BpInterface<IType>*>(ifacePtr));
     } else {
-        std::string myDescriptor = details::getDescriptor(ifacePtr);
-        if (myDescriptor.empty()) {
-            // interfaceDescriptor fails
-            return nullptr;
-        }
-
-        // for get + set
-        std::unique_lock<std::mutex> _lock = details::gBnMap.lock();
-
-        wp<BHwBinder> wBnObj = details::gBnMap.getLocked(ifacePtr, nullptr);
-        sp<IBinder> sBnObj = wBnObj.promote();
-
-        if (sBnObj == nullptr) {
-            auto func = details::getBnConstructorMap().get(myDescriptor, nullptr);
-            if (!func) {
-                func = details::gBnConstructorMap.get(myDescriptor, nullptr);
-                if (!func) {
-                    return nullptr;
-                }
-            }
-
-            sBnObj = sp<IBinder>(func(static_cast<void*>(ifacePtr)));
-
-            if (sBnObj != nullptr) {
-                details::gBnMap.setLocked(ifacePtr, static_cast<BHwBinder*>(sBnObj.get()));
-            }
-        }
-
-        return sBnObj;
+        return getOrCreateCachedBinder(ifacePtr);
     }
 }
 
