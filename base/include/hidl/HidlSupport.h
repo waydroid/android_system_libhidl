@@ -845,6 +845,10 @@ public:
         return (mMajor == other.get_major() && mMinor == other.get_minor());
     }
 
+    bool operator!=(const hidl_version& other) const {
+        return !(*this == other);
+    }
+
     bool operator<(const hidl_version& other) const {
         return (mMajor < other.get_major() ||
                 (mMajor == other.get_major() && mMinor < other.get_minor()));
