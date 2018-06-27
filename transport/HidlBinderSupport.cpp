@@ -199,8 +199,8 @@ status_t writeToParcel(const Status &s, Parcel* parcel) {
 }
 
 sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr) {
-    LOG_ALWAYS_FATAL_IF(ifacePtr->isRemote(),
-                        "getOrCreateCachedBinder does not have a way to construct remote binders");
+    LOG_ALWAYS_FATAL_IF(ifacePtr->isRemote(), "%s does not have a way to construct remote binders",
+                        __func__);
 
     std::string descriptor = details::getDescriptor(ifacePtr);
     if (descriptor.empty()) {
@@ -219,16 +219,15 @@ sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr
         if (!func) {
             // TODO(b/69122224): remove this static variable when prebuilts updated
             func = details::gBnConstructorMap.get(descriptor, nullptr);
-            if (!func) {
-                return nullptr;
-            }
         }
+        LOG_ALWAYS_FATAL_IF(func == nullptr, "%s gBnConstructorMap returned null for %s", __func__,
+                            descriptor.c_str());
 
         sBnObj = sp<IBinder>(func(static_cast<void*>(ifacePtr)));
+        LOG_ALWAYS_FATAL_IF(sBnObj == nullptr, "%s Bn constructor function returned null for %s",
+                            __func__, descriptor.c_str());
 
-        if (sBnObj != nullptr) {
-            details::gBnMap.setLocked(ifacePtr, static_cast<BHwBinder*>(sBnObj.get()));
-        }
+        details::gBnMap.setLocked(ifacePtr, static_cast<BHwBinder*>(sBnObj.get()));
     }
 
     return sBnObj;
