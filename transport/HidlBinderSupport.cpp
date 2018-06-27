@@ -18,6 +18,8 @@
 
 #include <hidl/HidlBinderSupport.h>
 
+#include <InternalStatic.h>  // TODO(b/69122224): remove this include, for getOrCreateCachedBinder
+
 // C includes
 #include <unistd.h>
 
@@ -194,6 +196,42 @@ status_t writeToParcel(const Status &s, Parcel* parcel) {
     }
     status = parcel->writeString16(String16(s.exceptionMessage()));
     return status;
+}
+
+sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr) {
+    LOG_ALWAYS_FATAL_IF(ifacePtr->isRemote(),
+                        "getOrCreateCachedBinder does not have a way to construct remote binders");
+
+    std::string descriptor = details::getDescriptor(ifacePtr);
+    if (descriptor.empty()) {
+        // interfaceDescriptor fails
+        return nullptr;
+    }
+
+    // for get + set
+    std::unique_lock<std::mutex> _lock = details::gBnMap.lock();
+
+    wp<BHwBinder> wBnObj = details::gBnMap.getLocked(ifacePtr, nullptr);
+    sp<IBinder> sBnObj = wBnObj.promote();
+
+    if (sBnObj == nullptr) {
+        auto func = details::getBnConstructorMap().get(descriptor, nullptr);
+        if (!func) {
+            // TODO(b/69122224): remove this static variable when prebuilts updated
+            func = details::gBnConstructorMap.get(descriptor, nullptr);
+            if (!func) {
+                return nullptr;
+            }
+        }
+
+        sBnObj = sp<IBinder>(func(static_cast<void*>(ifacePtr)));
+
+        if (sBnObj != nullptr) {
+            details::gBnMap.setLocked(ifacePtr, static_cast<BHwBinder*>(sBnObj.get()));
+        }
+    }
+
+    return sBnObj;
 }
 
 static bool gThreadPoolConfigured = false;
