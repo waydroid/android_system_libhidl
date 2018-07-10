@@ -48,6 +48,15 @@ void logAlwaysFatal(const char *message);
 // If "ro.vndk.version" is not set or set to "current", it returns empty string.
 std::string getVndkVersionStr();
 
+// Explicitly invokes the parameterized element's destructor;
+// intended to be used alongside the placement new operator.
+template<typename T>
+void destructElement(T* element) {
+    if (element != nullptr) {
+        element->~T();
+    }
+}
+
 // HIDL client/server code should *NOT* use this class.
 //
 // hidl_pointer wraps a pointer without taking ownership,
