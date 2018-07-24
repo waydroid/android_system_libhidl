@@ -240,7 +240,7 @@ SimpleBestFitAllocator::chunk_t* SimpleBestFitAllocator::dealloc(size_t start) {
             return freed;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 void SimpleBestFitAllocator::dump(const char* tag) const {
