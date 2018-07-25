@@ -22,3 +22,6 @@ bddab6184d7a346da6a07dc0828cf19a696f4caa3611c51f2e14565a14b40fd9 android.hidl.ba
 
 # ABI preserving changes to HALs during Android Q
 fcde1d0788066a62d5766f4dc19d4c1ec76967d5ddb636f59ccc66603460bcf8 android.hidl.manager@1.0::IServiceNotification
+
+# Clarification for b/67503915
+ec7fd79ed02dfa85bc499426adae3ebe23ef0524f3cd6957139324b83b18ca4c android.hidl.base@1.0::IBase
