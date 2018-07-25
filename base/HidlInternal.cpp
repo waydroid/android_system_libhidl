@@ -153,7 +153,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
 
     for (const auto& path : instrumentationLibPaths) {
         DIR *dir = opendir(path.c_str());
-        if (dir == 0) {
+        if (dir == nullptr) {
             LOG(WARNING) << path << " does not exist. ";
             return;
         }
