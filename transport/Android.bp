@@ -14,7 +14,6 @@
 
 hidl_package_root {
     name: "android.hidl",
-    path: "system/libhidl/transport",
 }
 
 cc_library {
