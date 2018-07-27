@@ -123,7 +123,7 @@ SimpleBestFitAllocator::~SimpleBestFitAllocator() {
         // and generates a false positive warning about accessing
         // memory that is already freed.
         // Add an "assert" to avoid the confusion.
-        LOG_ALWAYS_FATAL_IF(mList.head() == removed);
+        LOG_ALWAYS_FATAL_IF(mList.front() == removed);
 #endif
         delete removed;
     }
