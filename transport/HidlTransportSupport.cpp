@@ -58,7 +58,23 @@ bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service
         return false;
     }
 
-    details::gServicePrioMap.set(service, { policy, priority });
+    // Due to ABI considerations, IBase cannot have a destructor to clean this up.
+    // So, because this API is so infrequently used, (expected to be usually only
+    // one time for a process, but it can be more), we are cleaning it up here.
+    // TODO(b/37794345): if ever we update the HIDL ABI for launches in an Android
+    // release in the meta-version sense, we should remove this.
+    std::unique_lock<std::mutex> lock = details::gServicePrioMap.lock();
+
+    std::vector<wp<::android::hidl::base::V1_0::IBase>> toDelete;
+    for (const auto& kv : details::gServicePrioMap) {
+        if (kv.first.promote() == nullptr) {
+            toDelete.push_back(kv.first);
+        }
+    }
+    for (const auto& k : toDelete) {
+        details::gServicePrioMap.eraseLocked(k);
+    }
+    details::gServicePrioMap.setLocked(service, {policy, priority});
 
     return true;
 }

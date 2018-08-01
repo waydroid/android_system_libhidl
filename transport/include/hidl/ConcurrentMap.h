@@ -76,6 +76,14 @@ public:
         return iter->second;
     }
 
+    size_type eraseLocked(const K& k) { return mMap.erase(k); }
+
+    // the concurrent map must be locked in order to iterate over it
+    iterator begin() { return mMap.begin(); }
+    iterator end() { return mMap.end(); }
+    const_iterator begin() const { return mMap.begin(); }
+    const_iterator end() const { return mMap.end(); }
+
    private:
     mutable std::mutex mMutex;
     std::map<K, V> mMap;
