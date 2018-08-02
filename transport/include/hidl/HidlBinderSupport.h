@@ -49,6 +49,14 @@ private:
     wp<::android::hidl::base::V1_0::IBase> mBase;
 };
 
+// ---------------------- hidl_handle
+
+status_t readEmbeddedFromParcel(const hidl_handle &handle,
+        const Parcel &parcel, size_t parentHandle, size_t parentOffset);
+
+status_t writeEmbeddedToParcel(const hidl_handle &handle,
+        Parcel *parcel, size_t parentHandle, size_t parentOffset);
+
 // ---------------------- hidl_memory
 
 status_t readEmbeddedFromParcel(const hidl_memory &memory,
