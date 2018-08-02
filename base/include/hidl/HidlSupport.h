@@ -116,6 +116,10 @@ struct hidl_handle {
 
     // explicit conversion
     const native_handle_t *getNativeHandle() const;
+
+    // offsetof(hidl_handle, mHandle) exposed since mHandle is private.
+    static const size_t kOffsetOfNativeHandle;
+
 private:
     void freeHandle();
 

@@ -48,6 +48,30 @@ wp<hidl_death_recipient> hidl_binder_death_recipient::getRecipient() {
     return mRecipient;
 }
 
+const size_t hidl_handle::kOffsetOfNativeHandle = offsetof(hidl_handle, mHandle);
+static_assert(hidl_handle::kOffsetOfNativeHandle == 0, "wrong offset");
+
+status_t readEmbeddedFromParcel(const hidl_handle& /* handle */,
+        const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
+    const native_handle_t *handle;
+    status_t _hidl_err = parcel.readNullableEmbeddedNativeHandle(
+            parentHandle,
+            parentOffset + hidl_handle::kOffsetOfNativeHandle,
+            &handle);
+
+    return _hidl_err;
+}
+
+status_t writeEmbeddedToParcel(const hidl_handle &handle,
+        Parcel *parcel, size_t parentHandle, size_t parentOffset) {
+    status_t _hidl_err = parcel->writeEmbeddedNativeHandle(
+            handle.getNativeHandle(),
+            parentHandle,
+            parentOffset + hidl_handle::kOffsetOfNativeHandle);
+
+    return _hidl_err;
+}
+
 const size_t hidl_memory::kOffsetOfHandle = offsetof(hidl_memory, mHandle);
 const size_t hidl_memory::kOffsetOfName = offsetof(hidl_memory, mName);
 static_assert(hidl_memory::kOffsetOfHandle == 0, "wrong offset");
@@ -55,6 +79,7 @@ static_assert(hidl_memory::kOffsetOfName == 24, "wrong offset");
 
 status_t readEmbeddedFromParcel(const hidl_memory& memory,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
+    // TODO(b/111883309): Invoke readEmbeddedFromParcel(hidl_handle, ...).
     const native_handle_t *handle;
     ::android::status_t _hidl_err = parcel.readNullableEmbeddedNativeHandle(
             parentHandle,
@@ -83,6 +108,7 @@ status_t readEmbeddedFromParcel(const hidl_memory& memory,
 
 status_t writeEmbeddedToParcel(const hidl_memory &memory,
         Parcel *parcel, size_t parentHandle, size_t parentOffset) {
+    // TODO(b/111883309): Invoke writeEmbeddedToParcel(hidl_handle, ...).
     status_t _hidl_err = parcel->writeEmbeddedNativeHandle(
             memory.handle(),
             parentHandle,
