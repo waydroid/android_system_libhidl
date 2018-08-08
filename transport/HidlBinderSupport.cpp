@@ -19,7 +19,6 @@
 #include <hidl/HidlBinderSupport.h>
 
 #include <InternalStatic.h>  // TODO(b/69122224): remove this include, for getOrCreateCachedBinder
-#include <hwbinder/IPCThreadState.h>
 
 // C includes
 #include <inttypes.h>
