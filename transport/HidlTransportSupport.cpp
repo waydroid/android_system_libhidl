@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <hidl/HidlBinderSupport.h>
 #include <hidl/HidlTransportSupport.h>
-#include <hidl/Static.h>
+#include <hidl/HidlBinderSupport.h>
 
-#include <android-base/logging.h>
 #include <android/hidl/manager/1.0/IServiceManager.h>
 
 namespace android {
@@ -43,20 +41,20 @@ status_t handleTransportPoll(int /*fd*/) {
 bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service,
                            int policy, int priority) {
     if (service->isRemote()) {
-        LOG(ERROR) << "Can't set scheduler policy on remote service.";
+        ALOGE("Can't set scheduler policy on remote service.");
         return false;
     }
 
     if (policy != SCHED_NORMAL && policy != SCHED_FIFO && policy != SCHED_RR) {
-        LOG(ERROR) << "Invalid scheduler policy " << policy;
+        ALOGE("Invalid scheduler policy %d", policy);
         return false;
     }
 
     if (policy == SCHED_NORMAL && (priority < -20 || priority > 19)) {
-        LOG(ERROR) << "Invalid priority for SCHED_NORMAL: " << priority;
+        ALOGE("Invalid priority for SCHED_NORMAL: %d", priority);
         return false;
     } else if (priority < 1 || priority > 99) {
-        LOG(ERROR) << "Invalid priority for real-time policy: " << priority;
+        ALOGE("Invalid priority for real-time policy: %d", priority);
         return false;
     }
 
