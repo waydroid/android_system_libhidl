@@ -24,11 +24,10 @@
 #include <hidl/HidlSupport.h>
 #include <hidl/HidlTransportUtils.h>
 #include <hidl/MQDescriptor.h>
-#include <hidl/Static.h>
 #include <hwbinder/IBinder.h>
-#include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
-#include <hwbinder/ProcessState.h>
+#include <log/log.h>  // TODO(b/65843592): remove. Too many users depending on this transitively.
+
 // Defines functions for hidl_string, hidl_version, Status, hidl_vec, MQDescriptor,
 // etc. to interact with Parcel.
 
