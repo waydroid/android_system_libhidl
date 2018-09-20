@@ -47,17 +47,24 @@ bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service
         return false;
     }
 
-    if (policy != SCHED_NORMAL && policy != SCHED_FIFO && policy != SCHED_RR) {
-        LOG(ERROR) << "Invalid scheduler policy " << policy;
-        return false;
-    }
-
-    if (policy == SCHED_NORMAL && (priority < -20 || priority > 19)) {
-        LOG(ERROR) << "Invalid priority for SCHED_NORMAL: " << priority;
-        return false;
-    } else if (priority < 1 || priority > 99) {
-        LOG(ERROR) << "Invalid priority for real-time policy: " << priority;
-        return false;
+    switch (policy) {
+        case SCHED_NORMAL: {
+            if (priority < -20 || priority > 19) {
+                LOG(ERROR) << "Invalid priority for SCHED_NORMAL: " << priority;
+                return false;
+            }
+        } break;
+        case SCHED_RR:
+        case SCHED_FIFO: {
+            if (priority < 1 || priority > 99) {
+                LOG(ERROR) << "Invalid priority for " << policy << " policy: " << priority;
+                return false;
+            }
+        } break;
+        default: {
+            LOG(ERROR) << "Invalid scheduler policy " << policy;
+            return false;
+        }
     }
 
     // Due to ABI considerations, IBase cannot have a destructor to clean this up.
