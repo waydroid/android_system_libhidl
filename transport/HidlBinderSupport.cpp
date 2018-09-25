@@ -222,7 +222,8 @@ status_t writeToParcel(const Status &s, Parcel* parcel) {
     // Something really bad has happened, and we're not going to even
     // try returning rich error data.
     if (s.exceptionCode() == Status::EX_TRANSACTION_FAILED) {
-        return s.transactionError();
+        status_t status = s.transactionError();
+        return status == OK ? FAILED_TRANSACTION : status;
     }
 
     status_t status = parcel->writeInt32(s.exceptionCode());
