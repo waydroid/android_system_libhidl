@@ -56,7 +56,7 @@ hidl_handle::hidl_handle(const hidl_handle &other) {
 }
 
 // move constructor.
-hidl_handle::hidl_handle(hidl_handle &&other) {
+hidl_handle::hidl_handle(hidl_handle&& other) noexcept {
     mOwnsHandle = false;
     *this = std::move(other);
 }
@@ -87,7 +87,7 @@ hidl_handle &hidl_handle::operator=(const native_handle_t *native_handle) {
     return *this;
 }
 
-hidl_handle &hidl_handle::operator=(hidl_handle &&other) {
+hidl_handle& hidl_handle::operator=(hidl_handle&& other) noexcept {
     if (this != &other) {
         freeHandle();
         mHandle = other.mHandle;
@@ -167,11 +167,11 @@ hidl_string::hidl_string(const std::string &s) : hidl_string() {
     copyFrom(s.c_str(), s.size());
 }
 
-hidl_string::hidl_string(hidl_string &&other): hidl_string() {
+hidl_string::hidl_string(hidl_string&& other) noexcept : hidl_string() {
     moveFrom(std::forward<hidl_string>(other));
 }
 
-hidl_string &hidl_string::operator=(hidl_string &&other) {
+hidl_string& hidl_string::operator=(hidl_string&& other) noexcept {
     if (this != &other) {
         clear();
         moveFrom(std::forward<hidl_string>(other));
