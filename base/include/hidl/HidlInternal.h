@@ -71,13 +71,13 @@ struct hidl_pointer {
     }
     hidl_pointer(T* ptr) : hidl_pointer() { mPointer = ptr; }
     hidl_pointer(const hidl_pointer<T>& other) : hidl_pointer() { mPointer = other.mPointer; }
-    hidl_pointer(hidl_pointer<T>&& other) : hidl_pointer() { *this = std::move(other); }
+    hidl_pointer(hidl_pointer<T>&& other) noexcept : hidl_pointer() { *this = std::move(other); }
 
     hidl_pointer &operator=(const hidl_pointer<T>& other) {
         mPointer = other.mPointer;
         return *this;
     }
-    hidl_pointer &operator=(hidl_pointer<T>&& other) {
+    hidl_pointer& operator=(hidl_pointer<T>&& other) noexcept {
         mPointer = other.mPointer;
         other.mPointer = nullptr;
         return *this;
