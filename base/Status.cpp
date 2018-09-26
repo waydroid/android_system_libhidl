@@ -150,7 +150,7 @@ namespace details {
         }
     }
 
-    return_status &return_status::operator=(return_status &&other) {
+    return_status& return_status::operator=(return_status&& other) noexcept {
         if (!mCheckedStatus && !isOk()) {
             LOG(FATAL) << "Failed HIDL return status not checked: " << description();
         }
