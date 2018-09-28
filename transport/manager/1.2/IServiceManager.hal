@@ -25,6 +25,5 @@ interface IServiceManager extends @1.1::IServiceManager {
     // - Callbacks to support lazy hal shutdown when there are no clients (b/79983843)
     // - Method to list interfaces in the manifest (for b/76108617, since if they are
     //     lazy, they will no longer show up in listByInterface)
-    // - Broadcast to all HALs for systrace w/o root (b/78136428)
     // - Register w/o it having to call interface chain (b/36424585)
 };
