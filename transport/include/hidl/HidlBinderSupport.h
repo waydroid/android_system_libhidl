@@ -309,7 +309,7 @@ static status_t writeReferenceToParcel(
 // ---------------------- support for casting interfaces
 
 // Constructs a binder for this interface and caches it. If it has already been created
-// then it returns it. ifacePtr must be a local object.
+// then it returns it.
 sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr);
 
 // Construct a smallest possible binder from the given interface.
@@ -321,15 +321,7 @@ template <typename IType,
           typename = std::enable_if_t<std::is_same<details::i_tag, typename IType::_hidl_tag>::value>>
 sp<IBinder> toBinder(sp<IType> iface) {
     IType *ifacePtr = iface.get();
-    if (ifacePtr == nullptr) {
-        return nullptr;
-    }
-    if (ifacePtr->isRemote()) {
-        return ::android::hardware::IInterface::asBinder(
-            static_cast<BpInterface<IType>*>(ifacePtr));
-    } else {
-        return getOrCreateCachedBinder(ifacePtr);
-    }
+    return getOrCreateCachedBinder(ifacePtr);
 }
 
 template <typename IType, typename ProxyType, typename StubType>
