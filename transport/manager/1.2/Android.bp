@@ -7,6 +7,7 @@ hidl_interface {
         enabled: true,
     },
     srcs: [
+        "IClientCallback.hal",
         "IServiceManager.hal",
     ],
     interfaces: [
