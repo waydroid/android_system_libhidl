@@ -19,6 +19,7 @@
 #include <hidl/HidlBinderSupport.h>
 
 #include <InternalStatic.h>  // TODO(b/69122224): remove this include, for getOrCreateCachedBinder
+#include <android/hidl/base/1.0/BpHwBase.h>
 #include <hwbinder/IPCThreadState.h>
 
 // C includes
@@ -237,8 +238,17 @@ status_t writeToParcel(const Status &s, Parcel* parcel) {
 }
 
 sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr) {
-    LOG_ALWAYS_FATAL_IF(ifacePtr->isRemote(), "%s does not have a way to construct remote binders",
-                        __func__);
+    if (ifacePtr == nullptr) {
+        return nullptr;
+    }
+
+    if (ifacePtr->isRemote()) {
+        using ::android::hidl::base::V1_0::BpHwBase;
+
+        BpHwBase* bpBase = static_cast<BpHwBase*>(ifacePtr);
+        BpHwRefBase* bpRefBase = static_cast<BpHwRefBase*>(bpBase);
+        return sp<IBinder>(bpRefBase->remote());
+    }
 
     std::string descriptor = details::getDescriptor(ifacePtr);
     if (descriptor.empty()) {
