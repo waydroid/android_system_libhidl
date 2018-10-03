@@ -632,7 +632,7 @@ struct Waiter : IServiceNotification {
    private:
     const std::string mInterfaceName;
     const std::string mInstanceName;
-    const sp<IServiceManager1_1>& mSm;
+    sp<IServiceManager1_1> mSm;
     std::mutex mMutex;
     std::condition_variable mCondition;
     bool mRegistered = false;
