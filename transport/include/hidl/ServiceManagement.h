@@ -41,6 +41,7 @@ struct IServiceManager;
 namespace hardware {
 
 namespace details {
+// deprecated
 // e.x.: android.hardware.foo@1.0, IFoo, default
 void onRegistration(const std::string &packageName,
                     const std::string &interfaceName,
@@ -61,7 +62,10 @@ void preloadPassthroughService(const std::string &descriptor);
 sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& descriptor,
                                                              const std::string& instance,
                                                              bool retry, bool getStub);
-}
+
+status_t registerAsServiceInternal(const sp<::android::hidl::base::V1_0::IBase>& service,
+                                   const std::string& name);
+}  // namespace details
 
 // These functions are for internal use by hidl. If you want to get ahold
 // of an interface, the best way to do this is by calling IFoo::getService()
