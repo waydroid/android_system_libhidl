@@ -33,10 +33,14 @@
 #include <hidl/HidlTransportUtils.h>
 #include <hidl/ServiceManagement.h>
 #include <hidl/Status.h>
+#include <utils/SystemClock.h>
 
+#include <android-base/file.h>
 #include <android-base/logging.h>
+#include <android-base/parseint.h>
 #include <android-base/properties.h>
 #include <android-base/stringprintf.h>
+#include <android-base/strings.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
 #if !defined(__ANDROID_RECOVERY__)
@@ -156,9 +160,42 @@ void tryShortenProcessName(const std::string& packageAndVersion) {
 
 namespace details {
 
-void onRegistration(const std::string &packageName,
-                    const std::string& /* interfaceName */,
-                    const std::string& /* instanceName */) {
+/*
+ * Returns the age of the current process by reading /proc/self/stat and comparing starttime to the
+ * current time. This is useful for measuring how long it took a HAL to register itself.
+ */
+long getProcessAgeMs() {
+    constexpr const int PROCFS_STAT_STARTTIME_INDEX = 21;
+    std::string content;
+    android::base::ReadFileToString("/proc/self/stat", &content, false);
+    auto stats = android::base::Split(content, " ");
+    if (stats.size() <= PROCFS_STAT_STARTTIME_INDEX) {
+        LOG(INFO) << "Could not read starttime from /proc/self/stat";
+        return -1;
+    }
+    const std::string& startTimeString = stats[PROCFS_STAT_STARTTIME_INDEX];
+    static const int64_t ticksPerSecond = sysconf(_SC_CLK_TCK);
+    const int64_t uptime = android::uptimeMillis();
+
+    unsigned long long startTimeInClockTicks = 0;
+    if (android::base::ParseUint(startTimeString, &startTimeInClockTicks)) {
+        long startTimeMs = 1000ULL * startTimeInClockTicks / ticksPerSecond;
+        return uptime - startTimeMs;
+    }
+    return -1;
+}
+
+void onRegistration(const std::string& packageName, const std::string& interfaceName,
+                    const std::string& instanceName) {
+    long halStartDelay = getProcessAgeMs();
+    if (halStartDelay >= 0) {
+        // The "start delay" printed here is an estimate of how long it took the HAL to go from
+        // process creation to registering itself as a HAL.  Actual start time could be longer
+        // because the process might not have joined the threadpool yet, so it might not be ready to
+        // process transactions.
+        LOG(INFO) << "Registered " << interfaceName << "/" << instanceName << " (start delay of "
+                  << halStartDelay << "ms)";
+    }
     tryShortenProcessName(packageName);
 }
 
