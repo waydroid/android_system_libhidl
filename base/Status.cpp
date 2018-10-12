@@ -82,11 +82,17 @@ Status Status::ok() {
 }
 
 Status Status::fromExceptionCode(int32_t exceptionCode) {
+    if (exceptionCode == EX_TRANSACTION_FAILED) {
+        return Status(exceptionCode, FAILED_TRANSACTION);
+    }
     return Status(exceptionCode, OK);
 }
 
 Status Status::fromExceptionCode(int32_t exceptionCode,
                                  const char *message) {
+    if (exceptionCode == EX_TRANSACTION_FAILED) {
+        return Status(exceptionCode, FAILED_TRANSACTION, message);
+    }
     return Status(exceptionCode, OK, message);
 }
 
@@ -107,7 +113,7 @@ Status::Status(int32_t exceptionCode, int32_t errorCode, const char *message)
 
 void Status::setException(int32_t ex, const char *message) {
     mException = ex;
-    mErrorCode = NO_ERROR;  // an exception, not a transaction failure.
+    mErrorCode = ex == EX_TRANSACTION_FAILED ? FAILED_TRANSACTION : NO_ERROR;
     mMessage = message;
 }
 
