@@ -82,16 +82,6 @@ static void waitForHwServiceManager() {
     }
 }
 
-bool endsWith(const std::string &in, const std::string &suffix) {
-    return in.size() >= suffix.size() &&
-           in.substr(in.size() - suffix.size()) == suffix;
-}
-
-bool startsWith(const std::string &in, const std::string &prefix) {
-    return in.size() >= prefix.size() &&
-           in.substr(0, prefix.size()) == prefix;
-}
-
 static std::string binaryName() {
     std::ifstream ifs("/proc/self/cmdline");
     std::string cmdline;
@@ -121,7 +111,7 @@ static void tryShortenProcessName(const std::string& descriptor) {
     std::string processName = binaryName();
 
     // e.x. android.hardware.foo is this package
-    if (!startsWith(packageWithoutVersion(processName), packageWithoutVersion(descriptor))) {
+    if (!base::StartsWith(packageWithoutVersion(processName), packageWithoutVersion(descriptor))) {
         return;
     }
 
@@ -152,7 +142,7 @@ static void tryShortenProcessName(const std::string& descriptor) {
         fs >> oldComm;
 
         // don't rename if it already has an explicit name
-        if (startsWith(descriptor, oldComm)) {
+        if (base::StartsWith(descriptor, oldComm)) {
             fs.seekg(0, fs.beg);
             fs << newName;
         }
@@ -260,8 +250,7 @@ std::vector<std::string> search(const std::string &path,
     while ((dp = readdir(dir.get())) != nullptr) {
         std::string name = dp->d_name;
 
-        if (startsWith(name, prefix) &&
-                endsWith(name, suffix)) {
+        if (base::StartsWith(name, prefix) && base::EndsWith(name, suffix)) {
             results.push_back(name);
         }
     }
