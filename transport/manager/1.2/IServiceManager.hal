@@ -25,7 +25,6 @@ interface IServiceManager extends @1.1::IServiceManager {
     // - Better notifications (onRegistration will contain the interface)
     // - Method to list interfaces in the manifest (for b/76108617, since if they are
     //     lazy, they will no longer show up in listByInterface)
-    // - Register w/o it having to call interface chain (b/36424585)
 
     /**
      * Adds a callback that must be called when the specified server has no clients.
@@ -54,4 +53,16 @@ interface IServiceManager extends @1.1::IServiceManager {
      *     false if cb is null or if the client callback or server could not be found
      */
     unregisterClientCallback(interface server, IClientCallback cb) generates (bool success);
+
+    /**
+     * Exactly the same as @1.0::IServiceManager.add, but the interfaceChain of the service is
+     * provided in the same call.
+     *
+     * @param name Instance name. Must also be used to retrieve service.
+     * @param service Handle to registering service.
+     * @param chain service->interfaceChain
+     *
+     * @return success Whether or not the service was registered.
+     */
+    addWithChain(string name, interface service, vec<string> chain) generates (bool success);
 };
