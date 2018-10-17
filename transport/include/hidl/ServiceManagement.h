@@ -41,11 +41,6 @@ struct IServiceManager;
 namespace hardware {
 
 namespace details {
-// deprecated
-// e.x.: android.hardware.foo@1.0, IFoo, default
-void onRegistration(const std::string &packageName,
-                    const std::string &interfaceName,
-                    const std::string &instanceName);
 
 // Will not attempt to start a lazy HAL
 // e.x.: android.hardware.foo@1.0::IFoo, default
