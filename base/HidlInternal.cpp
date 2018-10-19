@@ -145,7 +145,9 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
     } else {
         static std::string halLibPathVndkSp = android::base::StringPrintf(
             HAL_LIBRARY_PATH_VNDK_SP_FOR_VERSION, getVndkVersionStr().c_str());
+#ifndef __ANDROID_VNDK__
         instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_SYSTEM);
+#endif
         instrumentationLibPaths.push_back(halLibPathVndkSp);
         instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_VENDOR);
         instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_ODM);
