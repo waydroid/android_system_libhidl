@@ -29,7 +29,8 @@ interface IServiceManager extends @1.1::IServiceManager {
     /**
      * Adds a callback that must be called when the specified server has no clients.
      *
-     * This must only be called after the first time the service has no clients.
+     * If the service has clients at the time of registration, the callback is called with
+     * hasClients true. After that, it is called based on the changes in clientele.
      *
      * @param server non-null service waiting to have no clients
      * @param cb non-null callback to call when there are no clients
