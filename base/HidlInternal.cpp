@@ -31,16 +31,17 @@
 #include <regex>
 
 extern "C" __attribute__((weak)) void __sanitizer_cov_dump();
-const char* kGcovPrefixEnvVar = "GCOV_PREFIX";
-const char* kGcovPrefixOverrideEnvVar = "GCOV_PREFIX_OVERRIDE";
-const char* kGcovPrefixPath = "/data/misc/trace/";
-const char* kSysPropHalCoverage = "hal.coverage.enable";
+
+const char kGcovPrefixEnvVar[] = "GCOV_PREFIX";
+const char kGcovPrefixOverrideEnvVar[] = "GCOV_PREFIX_OVERRIDE";
+const char kGcovPrefixPath[] = "/data/misc/trace/";
+const char kSysPropHalCoverage[] = "hal.coverage.enable";
 #if defined(__LP64__)
-const char* kSysPropInstrumentationPath = "hal.instrumentation.lib.path.64";
+const char kSysPropInstrumentationPath[] = "hal.instrumentation.lib.path.64";
 #else
-const char* kSysPropInstrumentationPath = "hal.instrumentation.lib.path.32";
+const char kSysPropInstrumentationPath[] = "hal.instrumentation.lib.path.32";
 #endif
-#endif
+#endif  // LIBHIDL_TARGET_DEBUGGABLE
 
 namespace android {
 namespace hardware {
