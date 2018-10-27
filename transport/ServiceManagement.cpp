@@ -238,9 +238,8 @@ sp<IServiceManager1_2> defaultServiceManager1_2() {
     return gDefaultServiceManager;
 }
 
-std::vector<std::string> search(const std::string &path,
-                              const std::string &prefix,
-                              const std::string &suffix) {
+static std::vector<std::string> findFiles(const std::string& path, const std::string& prefix,
+                                          const std::string& suffix) {
     std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(path.c_str()), closedir);
     if (!dir) return {};
 
@@ -388,7 +387,7 @@ struct PassthroughServiceManager : IServiceManager1_1 {
 #endif
 
         for (const std::string& path : paths) {
-            std::vector<std::string> libs = search(path, prefix, ".so");
+            std::vector<std::string> libs = findFiles(path, prefix, ".so");
 
             for (const std::string &lib : libs) {
                 const std::string fullPath = path + lib;
@@ -509,7 +508,7 @@ struct PassthroughServiceManager : IServiceManager1_1 {
         for (const auto &pair : sAllPaths) {
             Arch arch = pair.first;
             for (const auto &path : pair.second) {
-                std::vector<std::string> libs = search(path, "", ".so");
+                std::vector<std::string> libs = findFiles(path, "", ".so");
                 for (const std::string &lib : libs) {
                     std::string matchedName;
                     std::string implName;
