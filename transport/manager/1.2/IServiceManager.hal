@@ -22,7 +22,6 @@ import IClientCallback;
 
 interface IServiceManager extends @1.1::IServiceManager {
     // TODO(b/66921961): additional functionality for the next release:
-    // - Better notifications (onRegistration will contain the interface)
     // - Method to list interfaces in the manifest (for b/76108617, since if they are
     //     lazy, they will no longer show up in listByInterface)
 
