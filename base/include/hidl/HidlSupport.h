@@ -997,12 +997,31 @@ std::string toString(const hidl_array<T, SIZE1, SIZE2, SIZES...> &a) {
             + details::toString(details::const_accessor<T, SIZE1, SIZE2, SIZES...>(a.data()));
 }
 
+namespace details {
+// Never instantiated. Used as a placeholder for template variables.
+template <typename T>
+struct hidl_invalid_type;
+
+// HIDL generates specializations of this for enums. See hidl_enum_range.
+template <typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
+constexpr hidl_invalid_type<T> hidl_enum_values;
+}  // namespace details
+
 /**
- * Every HIDL generated enum generates an implementation of this function.
+ * Every HIDL generated enum supports this function.
  * E.x.: for(const auto v : hidl_enum_range<Enum>) { ... }
  */
 template <typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
-struct hidl_enum_range;
+struct hidl_enum_range {
+    constexpr auto begin() const { return std::begin(details::hidl_enum_values<T>); }
+    constexpr auto cbegin() const { return begin(); }
+    constexpr auto rbegin() const { return std::rbegin(details::hidl_enum_values<T>); }
+    constexpr auto crbegin() const { return rbegin(); }
+    constexpr auto end() const { return std::end(details::hidl_enum_values<T>); }
+    constexpr auto cend() const { return end(); }
+    constexpr auto rend() const { return std::rend(details::hidl_enum_values<T>); }
+    constexpr auto crend() const { return rend(); }
+};
 
 template <typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
 struct hidl_enum_iterator {
