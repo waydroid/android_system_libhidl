@@ -21,11 +21,6 @@ import @1.1::IServiceManager;
 import IClientCallback;
 
 interface IServiceManager extends @1.1::IServiceManager {
-    // TODO(b/66921961): additional functionality for the next release:
-    // - Better notifications (onRegistration will contain the interface)
-    // - Method to list interfaces in the manifest (for b/76108617, since if they are
-    //     lazy, they will no longer show up in listByInterface)
-
     /**
      * Adds a callback that must be called when the specified server has no clients.
      *
@@ -66,4 +61,16 @@ interface IServiceManager extends @1.1::IServiceManager {
      * @return success Whether or not the service was registered.
      */
     addWithChain(string name, interface service, vec<string> chain) generates (bool success);
+
+    /**
+     * List all instances of a particular service from the manifest. Must be sorted. These HALs
+     * may not be started if they are lazy.
+     *
+     * See also @1.0::IServiceManager's listByInterface function.
+     *
+     * @param fqName         Fully-qualified interface name.
+     *
+     * @return instanceNames List of instance names running the particular service.
+     */
+    listManifestByInterface(string fqName) generates (vec<string> instanceNames);
 };
