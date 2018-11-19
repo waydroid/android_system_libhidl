@@ -65,6 +65,7 @@ cc_library {
 
     srcs: [
         "HidlBinderSupport.cpp",
+        "HidlLazyUtils.cpp",
         "HidlPassthroughSupport.cpp",
         "HidlTransportSupport.cpp",
         "HidlTransportUtils.cpp",
