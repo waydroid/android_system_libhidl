@@ -5,6 +5,7 @@ hidl_interface {
     root: "android.hidl",
     vndk: {
         enabled: true,
+        support_system_process: true,
     },
     srcs: [
         "types.hal",
