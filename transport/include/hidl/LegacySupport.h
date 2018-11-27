@@ -96,7 +96,7 @@ status_t defaultPassthroughServiceImplementation(size_t maxThreads = 1) {
  *
  * If this function is called multiple times to register different services, then this process will
  * only exit once all services have 0 clients. This function does not know about clients registered
- * through registerPassthroughServiceImplementation, so if that function is used in conjuction with
+ * through registerPassthroughServiceImplementation, so if that function is used in conjunction with
  * this one, the process may exit while a client is still using the HAL.
  */
 template <class Interface>
