@@ -17,7 +17,7 @@
 #define LOG_TAG "LibHidlTest"
 
 #include <android-base/logging.h>
-#include <android/hardware/tests/inheritance/1.0/IParent.h>
+#include <android/hidl/memory/1.0/IMemory.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hidl/HidlSupport.h>
@@ -462,12 +462,14 @@ TEST_F(LibHidlTest, StatusStringTest) {
 
 TEST_F(LibHidlTest, PreloadTest) {
     using ::android::hardware::preloadPassthroughService;
-    using ::android::hardware::tests::inheritance::V1_0::IParent;
+    using ::android::hidl::memory::V1_0::IMemory;
 
-    static const std::string kLib = "android.hardware.tests.inheritance@1.0-impl.so";
+    // installed on all devices by default in both bitnesses and not otherwise a dependency of this
+    // test.
+    static const std::string kLib = "android.hidl.memory@1.0-impl.so";
 
     EXPECT_FALSE(isLibraryOpen(kLib));
-    preloadPassthroughService<IParent>();
+    preloadPassthroughService<IMemory>();
     EXPECT_TRUE(isLibraryOpen(kLib));
 }
 
