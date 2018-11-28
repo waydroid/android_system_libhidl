@@ -29,7 +29,7 @@ cc_test {
     srcs: ["test_main.cpp"],
 
     shared_libs: [
-        "android.hardware.tests.inheritance@1.0",
+        "android.hidl.memory@1.0",
         "libbase",
         "libhidlbase",
         "libhidltransport",
@@ -39,10 +39,6 @@ cc_test {
         "libcutils",
     ],
     static_libs: ["libgtest", "libgmock"],
-
-    required: [
-        "android.hardware.tests.inheritance@1.0-impl",
-    ],
 
     cflags: [
         "-O0",
