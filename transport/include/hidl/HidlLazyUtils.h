@@ -31,7 +31,7 @@ class LazyServiceRegistrar {
    public:
     LazyServiceRegistrar();
     status_t registerServiceWithCallback(const sp<::android::hidl::base::V1_0::IBase>& service,
-                                         const std::string& name);
+                                         const std::string& name = "default");
 
    private:
     std::shared_ptr<details::LazyServiceRegistrarImpl> mImpl;
