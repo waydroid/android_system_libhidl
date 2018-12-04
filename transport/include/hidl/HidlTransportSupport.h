@@ -93,7 +93,7 @@ bool interfacesEqual(sp<ILeft> left, sp<IRight> right) {
         return left == right;
     }
 
-    return toBinder<ILeft>(left) == toBinder<IRight>(right);
+    return getOrCreateCachedBinder(left.get()) == getOrCreateCachedBinder(right.get());
 }
 
 namespace details {
@@ -129,7 +129,7 @@ Return<sp<IChild>> castInterface(sp<IParent> parent, const char* childIndicator,
     // TODO b/32001926 Needs to be fixed for socket mode.
     if (parent->isRemote()) {
         // binderized mode. Got BpChild. grab the remote and wrap it.
-        return sp<IChild>(new BpChild(toBinder<IParent>(parent)));
+        return sp<IChild>(new BpChild(getOrCreateCachedBinder(parent.get())));
     }
     // Passthrough mode. Got BnChild or BsChild.
     return sp<IChild>(static_cast<IChild *>(parent.get()));
@@ -149,7 +149,7 @@ sp<IType> getServiceInternal(const std::string& instance, bool retry, bool getSt
 
     if (base->isRemote()) {
         // getRawServiceInternal guarantees we get the proper class
-        return sp<IType>(new BpType(toBinder<IBase>(base)));
+        return sp<IType>(new BpType(getOrCreateCachedBinder(base.get())));
     }
 
     return IType::castFrom(base);
