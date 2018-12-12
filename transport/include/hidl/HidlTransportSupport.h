@@ -84,17 +84,13 @@ status_t handleTransportPoll(int fd);
 bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service,
                            int policy, int priority);
 
-template <typename ILeft,
-          typename IRight,
-          typename = std::enable_if_t<std::is_same<details::i_tag, typename ILeft::_hidl_tag>::value>,
-          typename = std::enable_if_t<std::is_same<details::i_tag, typename IRight::_hidl_tag>::value>>
-bool interfacesEqual(sp<ILeft> left, sp<IRight> right) {
-    if (left == nullptr || right == nullptr || !left->isRemote() || !right->isRemote()) {
-        return left == right;
-    }
-
-    return getOrCreateCachedBinder(left.get()) == getOrCreateCachedBinder(right.get());
-}
+/**
+ * Returns whether two interfaces represent the same interface. References to interfaces in the same
+ * process will always be equivalent. However, in order to compare a service that is a proxy to a
+ * different process, its underlying structure may have to be checked.
+ */
+bool interfacesEqual(const sp<::android::hidl::base::V1_0::IBase>& left,
+                     const sp<::android::hidl::base::V1_0::IBase>& right);
 
 namespace details {
 
