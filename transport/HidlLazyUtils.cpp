@@ -90,7 +90,6 @@ status_t LazyServiceRegistrarImpl::registerServiceWithCallback(
     const sp<::android::hidl::base::V1_0::IBase>& service, const std::string& name) {
     static auto manager = hardware::defaultServiceManager1_2();
     LOG(INFO) << "Registering HAL: " << service->descriptor << " with name: " << name;
-    // TODO(b/118394906): Convert to service->registerAsService(name) when possible
     status_t res = android::hardware::details::registerAsServiceInternal(service, name);
     if (res == android::OK) {
         mClientCallback->incServiceCounter();
