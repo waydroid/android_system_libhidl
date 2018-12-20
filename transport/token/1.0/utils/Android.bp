@@ -25,16 +25,22 @@ cc_library {
         "HybridInterface.cpp",
     ],
 
+    header_libs: [
+        "libbinder_headers",
+    ],
+
     shared_libs: [
         "libutils",
-        "libbinder",
         "liblog",
         "libhidlbase",
         "android.hidl.token@1.0",
     ],
 
+    export_header_lib_headers: [
+        "libbinder_headers",
+    ],
+
     export_shared_lib_headers: [
-        "libbinder",
         "libhidlbase",
     ],
 
