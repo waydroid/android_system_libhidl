@@ -110,7 +110,7 @@ __attribute__((warn_unused_result)) status_t registerLazyPassthroughServiceImple
 
     return details::registerPassthroughServiceImplementation<Interface>(
         [](const sp<Interface>& service, const std::string& name) {
-            return serviceCounter->registerServiceWithCallback(service, name);
+            return serviceCounter->registerService(service, name);
         },
         name);
 }
