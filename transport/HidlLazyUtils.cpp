@@ -52,8 +52,8 @@ class LazyServiceRegistrarImpl {
    public:
     LazyServiceRegistrarImpl() : mClientCallback(new ClientCounterCallback) {}
 
-    status_t registerServiceWithCallback(const sp<::android::hidl::base::V1_0::IBase>& service,
-                                         const std::string& name);
+    status_t registerService(const sp<::android::hidl::base::V1_0::IBase>& service,
+                             const std::string& name);
 
    private:
     sp<ClientCounterCallback> mClientCallback;
@@ -86,7 +86,7 @@ Return<void> ClientCounterCallback::onClients(const sp<::android::hidl::base::V1
     return Status::ok();
 }
 
-status_t LazyServiceRegistrarImpl::registerServiceWithCallback(
+status_t LazyServiceRegistrarImpl::registerService(
     const sp<::android::hidl::base::V1_0::IBase>& service, const std::string& name) {
     static auto manager = hardware::defaultServiceManager1_2();
     LOG(INFO) << "Registering HAL: " << service->descriptor << " with name: " << name;
@@ -110,9 +110,9 @@ LazyServiceRegistrar::LazyServiceRegistrar() {
     mImpl = std::make_shared<details::LazyServiceRegistrarImpl>();
 }
 
-status_t LazyServiceRegistrar::registerServiceWithCallback(
+status_t LazyServiceRegistrar::registerService(
     const sp<::android::hidl::base::V1_0::IBase>& service, const std::string& name) {
-    return mImpl->registerServiceWithCallback(service, name);
+    return mImpl->registerService(service, name);
 }
 
 }  // namespace hardware
