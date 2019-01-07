@@ -35,7 +35,9 @@ ConcurrentMap<std::string, std::function<sp<IBinder>(void *)>>
 ConcurrentMap<const ::android::hidl::base::V1_0::IBase*, wp<::android::hardware::BHwBinder>>
     gBnMap{};
 
+// TODO(b/122472540): replace with single, hidden map
 ConcurrentMap<wp<::android::hidl::base::V1_0::IBase>, SchedPrio> gServicePrioMap{};
+ConcurrentMap<wp<::android::hidl::base::V1_0::IBase>, bool> gServiceSidMap{};
 
 ConcurrentMap<std::string, std::function<sp<::android::hidl::base::V1_0::IBase>(void *)>>
         gBsConstructorMap;
