@@ -27,7 +27,9 @@ interface IServiceManager extends @1.1::IServiceManager {
      * If the service has clients at the time of registration, the callback is called with
      * hasClients true. After that, it is called based on the changes in clientele.
      *
-     * @param server non-null service waiting to have no clients
+     * @param fqName Fully-qualified interface name (used to register)
+     * @param name Instance name (of the registered service)
+     * @param server non-null service waiting to have no clients (previously registered)
      * @param cb non-null callback to call when there are no clients
      * @return success
      *     true on success
@@ -35,7 +37,11 @@ interface IServiceManager extends @1.1::IServiceManager {
      *      - the server or cb parameters are null
      *      - this is called by a process other than the server process
      */
-    registerClientCallback(interface server, IClientCallback cb) generates (bool success);
+    registerClientCallback(string fqName,
+                           string name,
+                           interface server,
+                           IClientCallback cb)
+        generates (bool success);
 
     /**
      * Removes a callback previously registered with registerClientCallback.
@@ -68,9 +74,32 @@ interface IServiceManager extends @1.1::IServiceManager {
      *
      * See also @1.0::IServiceManager's listByInterface function.
      *
-     * @param fqName         Fully-qualified interface name.
+     * @param fqName Fully-qualified interface name.
      *
      * @return instanceNames List of instance names running the particular service.
      */
     listManifestByInterface(string fqName) generates (vec<string> instanceNames);
+
+    /**
+     * Unregisters a service if there are no clients for it. This must only unregister the
+     * service if it is called from the same process that registered the service.
+     *
+     * This unregisters all instances of the service, even if they are under a different instance
+     * name.
+     *
+     * Recommended usage is when creating a lazy process, try unregistering when IClientCallback's
+     * onClients(*, false) is called. If this unregister is successful, then it is safe to exit. If
+     * it is unsuccessful, then you can assume a client re-associated with the server. If a process
+     * has multiple servers, and only some succeed in unregistration, then the unregistered services
+     * can be re-registered.
+     *
+     * See also addWithChain and @1.0::IServiceManager's add.
+     *
+     * @param fqName Fully-qualified interface name.
+     * @param name Instance name.
+     * @param service Handle to registering service.
+     *
+     * @return success Whether the service was successfully unregistered.
+     */
+    tryUnregister(string fqName, string name, interface service) generates (bool success);
 };
