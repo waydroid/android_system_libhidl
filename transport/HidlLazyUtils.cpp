@@ -70,10 +70,10 @@ void ClientCounterCallback::incServiceCounter() {
 Return<void> ClientCounterCallback::onClients(const sp<::android::hidl::base::V1_0::IBase>& service,
                                               bool clients) {
     if (clients) {
-        LOG(INFO) << "HAL " << service->descriptor << " connected.";
+        LOG(INFO) << "HAL " << getDescriptor(service.get()) << " connected.";
         mNumConnectedServices++;
     } else {
-        LOG(INFO) << "HAL " << service->descriptor << " disconnected.";
+        LOG(INFO) << "HAL " << getDescriptor(service.get()) << " disconnected.";
         mNumConnectedServices--;
     }
     LOG(INFO) << "HAL has " << mNumConnectedServices << " (of " << mNumRegisteredServices
@@ -89,11 +89,12 @@ Return<void> ClientCounterCallback::onClients(const sp<::android::hidl::base::V1
 status_t LazyServiceRegistrarImpl::registerService(
     const sp<::android::hidl::base::V1_0::IBase>& service, const std::string& name) {
     static auto manager = hardware::defaultServiceManager1_2();
-    LOG(INFO) << "Registering HAL: " << service->descriptor << " with name: " << name;
+    LOG(INFO) << "Registering HAL: " << getDescriptor(service.get()) << " with name: " << name;
     status_t res = android::hardware::details::registerAsServiceInternal(service, name);
     if (res == android::OK) {
         mClientCallback->incServiceCounter();
-        bool ret = manager->registerClientCallback(service, mClientCallback);
+        bool ret = manager->registerClientCallback(getDescriptor(service.get()), name, service,
+                                                   mClientCallback);
         if (!ret) {
             res = android::INVALID_OPERATION;
             LOG(ERROR) << "Failed to add client callback";
