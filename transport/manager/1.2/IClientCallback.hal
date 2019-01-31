@@ -21,6 +21,10 @@ interface IClientCallback {
      * This is called when there is a transition between having >= 1 clients and having 0 clients
      * (or vice versa).
      *
+     * Upon receiving hasClients false, if the process decides to exit, it is recommended to try to
+     * unregister using @1.2::IServiceManager's tryUnregister before quiting in case another client
+     * associates.
+     *
      * @param registered binder 'server' registered with IServiceManager's registerClientCallback
      * @param hasClients whether there are currently clients
      *     true - when there are >= 1 clients. This must be called as soon as IServiceManager::get
