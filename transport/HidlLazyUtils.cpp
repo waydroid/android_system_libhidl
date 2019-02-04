@@ -121,7 +121,7 @@ Return<void> ClientCounterCallback::onClients(const sp<::android::hidl::base::V1
     }
 
     LOG(INFO) << "Process has " << mNumConnectedServices << " (of " << mRegisteredServices.size()
-              << " available) clients in use after notification " << getDescriptor(service.get())
+              << " available) client(s) in use after notification " << getDescriptor(service.get())
               << " has clients: " << clients;
 
     if (mNumConnectedServices == 0) {
@@ -144,8 +144,7 @@ void ClientCounterCallback::tryShutdown() {
         bool success = manager->tryUnregister(descriptor, entry.name, entry.service);
 
         if (!success) {
-            LOG(INFO) << "Failed to unregister HAL " << descriptor << "/" << entry.name
-                      << ". Going to re-register remaining instances.";
+            LOG(INFO) << "Failed to unregister HAL " << descriptor << "/" << entry.name;
             break;
         }
     }
