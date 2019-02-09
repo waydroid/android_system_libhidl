@@ -280,6 +280,21 @@ TEST_F(LibHidlTest, VecEqTest) {
     EXPECT_TRUE(hv1 != hv3);
 }
 
+TEST_F(LibHidlTest, VecEqInitializerTest) {
+    std::vector<int32_t> reference{5, 6, 7};
+    android::hardware::hidl_vec<int32_t> hv1{1, 2, 3};
+    hv1 = {5, 6, 7};
+    android::hardware::hidl_vec<int32_t> hv2;
+    hv2 = {5, 6, 7};
+    android::hardware::hidl_vec<int32_t> hv3;
+    hv3 = {5, 6, 8};
+
+    // use the == and != operator intentionally here
+    EXPECT_TRUE(hv1 == hv2);
+    EXPECT_TRUE(hv1 == reference);
+    EXPECT_TRUE(hv1 != hv3);
+}
+
 TEST_F(LibHidlTest, VecRangeCtorTest) {
     struct ConvertibleType {
         int val;
