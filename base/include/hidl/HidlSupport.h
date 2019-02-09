@@ -345,19 +345,7 @@ struct hidl_vec {
         *this = std::move(other);
     }
 
-    hidl_vec(const std::initializer_list<T> list)
-            : mOwnsBuffer(true) {
-        if (list.size() > UINT32_MAX) {
-            details::logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
-        }
-        mSize = static_cast<uint32_t>(list.size());
-        mBuffer = new T[mSize];
-
-        size_t idx = 0;
-        for (auto it = list.begin(); it != list.end(); ++it) {
-            mBuffer[idx++] = *it;
-        }
-    }
+    hidl_vec(const std::initializer_list<T> list) : hidl_vec() { *this = list; }
 
     hidl_vec(const std::vector<T> &other) : hidl_vec() {
         *this = other;
@@ -450,6 +438,24 @@ struct hidl_vec {
             delete[] mBuffer;
         }
         copyFrom(other, other.size());
+        return *this;
+    }
+
+    hidl_vec& operator=(const std::initializer_list<T> list) {
+        if (list.size() > UINT32_MAX) {
+            details::logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
+        }
+        if (mOwnsBuffer) {
+            delete[] mBuffer;
+        }
+        mSize = static_cast<uint32_t>(list.size());
+        mBuffer = new T[mSize];
+        mOwnsBuffer = true;
+
+        size_t idx = 0;
+        for (auto it = list.begin(); it != list.end(); ++it) {
+            mBuffer[idx++] = *it;
+        }
         return *this;
     }
 
