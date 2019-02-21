@@ -85,6 +85,18 @@ bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service
                            int policy, int priority);
 
 /**
+ * Sets whether or not this object should request security contexts to be populatd for incoming
+ * calls (e.g. with getCallingSid).
+ *
+ * This method MUST be called before passing this service to another process
+ * and/or registering it with registerAsService().
+ *
+ * @param service the service to set the policy for
+ * @param requesting whether or not to request sid (default is false)
+ */
+bool setRequestingSid(const sp<::android::hidl::base::V1_0::IBase>& service, bool requesting);
+
+/**
  * Returns whether two interfaces represent the same interface. References to interfaces in the same
  * process will always be equivalent. However, in order to compare a service that is a proxy to a
  * different process, its underlying structure may have to be checked.
