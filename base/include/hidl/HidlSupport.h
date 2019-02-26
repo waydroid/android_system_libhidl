@@ -334,7 +334,7 @@ struct hidl_vec {
     }
 
     // Note, does not initialize primitive types.
-    explicit hidl_vec(size_t size) : hidl_vec() { resize(size); }
+    hidl_vec(size_t size) : hidl_vec() { resize(size); }
 
     hidl_vec(const hidl_vec<T> &other) : hidl_vec() {
         *this = other;
