@@ -221,8 +221,9 @@ SimpleBestFitAllocator::chunk_t* SimpleBestFitAllocator::dealloc(size_t start) {
                     if (p->free || !cur->size) {
                         freed = p;
                         p->size += cur->size;
-                        mList.erase(pos);
+                        pos = mList.erase(pos);
                         delete cur;
+                        if (pos == mList.end()) break;
                     }
                 }
                 if (++pos == mList.end()) break;
