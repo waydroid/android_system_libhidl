@@ -27,6 +27,7 @@ cc_test {
     defaults: ["libhidl-defaults"],
     gtest: false,
     srcs: ["test_main.cpp"],
+    test_suites: ["device-tests"],
 
     shared_libs: [
         "android.hidl.memory@1.0",
