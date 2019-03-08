@@ -67,6 +67,7 @@ public:
     std::unique_lock<std::mutex> lock() { return std::unique_lock<std::mutex>(mMutex); }
 
     void setLocked(K&& k, V&& v) { mMap[std::forward<K>(k)] = std::forward<V>(v); }
+    void setLocked(K&& k, const V& v) { mMap[std::forward<K>(k)] = v; }
 
     const V& getLocked(const K& k, const V& def) const {
         const_iterator iter = mMap.find(k);
@@ -75,6 +76,14 @@ public:
         }
         return iter->second;
     }
+
+    size_type eraseLocked(const K& k) { return mMap.erase(k); }
+
+    // the concurrent map must be locked in order to iterate over it
+    iterator begin() { return mMap.begin(); }
+    iterator end() { return mMap.end(); }
+    const_iterator begin() const { return mMap.begin(); }
+    const_iterator end() const { return mMap.end(); }
 
    private:
     mutable std::mutex mMutex;
