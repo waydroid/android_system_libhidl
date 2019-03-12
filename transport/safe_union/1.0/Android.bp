@@ -10,9 +10,6 @@ hidl_interface {
     srcs: [
         "types.hal",
     ],
-    types: [
-        "Monostate",
-    ],
     gen_java: true,
 }
 
