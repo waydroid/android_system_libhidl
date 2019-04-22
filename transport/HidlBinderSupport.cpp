@@ -256,16 +256,16 @@ sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr
     }
 
     // for get + set
-    std::unique_lock<std::mutex> _lock = details::gBnMap.lock();
+    std::unique_lock<std::mutex> _lock = details::gBnMap->lock();
 
-    wp<BHwBinder> wBnObj = details::gBnMap.getLocked(ifacePtr, nullptr);
+    wp<BHwBinder> wBnObj = details::gBnMap->getLocked(ifacePtr, nullptr);
     sp<IBinder> sBnObj = wBnObj.promote();
 
     if (sBnObj == nullptr) {
         auto func = details::getBnConstructorMap().get(descriptor, nullptr);
         if (!func) {
             // TODO(b/69122224): remove this static variable when prebuilts updated
-            func = details::gBnConstructorMap.get(descriptor, nullptr);
+            func = details::gBnConstructorMap->get(descriptor, nullptr);
         }
         LOG_ALWAYS_FATAL_IF(func == nullptr, "%s gBnConstructorMap returned null for %s", __func__,
                             descriptor.c_str());
@@ -274,7 +274,7 @@ sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr
         LOG_ALWAYS_FATAL_IF(sBnObj == nullptr, "%s Bn constructor function returned null for %s",
                             __func__, descriptor.c_str());
 
-        details::gBnMap.setLocked(ifacePtr, static_cast<BHwBinder*>(sBnObj.get()));
+        details::gBnMap->setLocked(ifacePtr, static_cast<BHwBinder*>(sBnObj.get()));
     }
 
     return sBnObj;
