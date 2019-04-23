@@ -16,6 +16,12 @@
 
 LOCAL_PATH := $(call my-dir)
 
+# DEVICE_FRAMEWORK_MANIFEST_FILE is a device-specific framework manifest file
+# that installed to the system image. HALs entries should be written to
+# DEVICE_FRAMEWORK_MANIFEST_FILE or PRODUCT_MANIFEST_FILES depend on the path of
+# the module. It is recommended that such device-specific modules to be
+# installed on product partition.
+
 FRAMEWORK_MANIFEST_INPUT_FILES := $(LOCAL_PATH)/manifest.xml
 ifdef DEVICE_FRAMEWORK_MANIFEST_FILE
   FRAMEWORK_MANIFEST_INPUT_FILES += $(DEVICE_FRAMEWORK_MANIFEST_FILE)
@@ -56,9 +62,9 @@ LOCAL_PREBUILT_MODULE_FILE := $(GEN)
 include $(BUILD_PREBUILT)
 BUILT_VENDOR_MATRIX := $(LOCAL_BUILT_MODULE)
 
-# Framework Manifest
+# System Manifest
 include $(CLEAR_VARS)
-LOCAL_MODULE        := framework_manifest.xml
+LOCAL_MODULE        := system_manifest.xml
 LOCAL_MODULE_STEM   := manifest.xml
 LOCAL_MODULE_CLASS  := ETC
 LOCAL_MODULE_PATH   := $(TARGET_OUT)/etc/vintf
@@ -78,6 +84,26 @@ LOCAL_PREBUILT_MODULE_FILE := $(GEN)
 include $(BUILD_PREBUILT)
 BUILT_SYSTEM_MANIFEST := $(LOCAL_BUILT_MODULE)
 
+# Product Manifest
+ifneq ($(PRODUCT_MANIFEST_FILES),)
+include $(CLEAR_VARS)
+LOCAL_MODULE := product_manifest.xml
+LOCAL_MODULE_STEM := manifest.xml
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_RELATIVE_PATH := vintf
+GEN := $(local-generated-sources-dir)/manifest.xml
+$(GEN): PRIVATE_PRODUCT_MANIFEST_FILES := $(PRODUCT_MANIFEST_FILES)
+$(GEN): $(PRODUCT_MANIFEST_FILES) $(HOST_OUT_EXECUTABLES)/assemble_vintf
+	$(HOST_OUT_EXECUTABLES)/assemble_vintf \
+		-i $(call normalize-path-list,$(PRIVATE_PRODUCT_MANIFEST_FILES)) \
+		-o $@
+
+LOCAL_PREBUILT_MODULE_FILE := $(GEN)
+include $(BUILD_PREBUILT)
+BUILT_PRODUCT_MANIFEST := $(LOCAL_BUILT_MODULE)
+endif
+
 VINTF_VNDK_VERSION :=
 FRAMEWORK_MANIFEST_INPUT_FILES :=
 DEVICE_MATRIX_INPUT_FILE :=
+PRODUCT_MANIFEST_INPUT_FILES :=
