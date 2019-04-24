@@ -85,9 +85,9 @@ bool setMinSchedulerPolicy(const sp<IBase>& service, int policy, int priority) {
     // Due to ABI considerations, IBase cannot have a destructor to clean this up.
     // So, because this API is so infrequently used, (expected to be usually only
     // one time for a process, but it can be more), we are cleaning it up here.
-    std::unique_lock<std::mutex> lock = details::gServicePrioMap.lock();
-    pruneMapLocked(details::gServicePrioMap);
-    details::gServicePrioMap.setLocked(service, {policy, priority});
+    std::unique_lock<std::mutex> lock = details::gServicePrioMap->lock();
+    pruneMapLocked(details::gServicePrioMap.get());
+    details::gServicePrioMap->setLocked(service, {policy, priority});
 
     return true;
 }
@@ -101,9 +101,9 @@ bool setRequestingSid(const sp<IBase>& service, bool requesting) {
     // Due to ABI considerations, IBase cannot have a destructor to clean this up.
     // So, because this API is so infrequently used, (expected to be usually only
     // one time for a process, but it can be more), we are cleaning it up here.
-    std::unique_lock<std::mutex> lock = details::gServiceSidMap.lock();
-    pruneMapLocked(details::gServiceSidMap);
-    details::gServiceSidMap.setLocked(service, requesting);
+    std::unique_lock<std::mutex> lock = details::gServiceSidMap->lock();
+    pruneMapLocked(details::gServiceSidMap.get());
+    details::gServiceSidMap->setLocked(service, requesting);
 
     return true;
 }

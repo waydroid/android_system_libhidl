@@ -90,6 +90,23 @@ public:
     std::map<K, V> mMap;
 };
 
+namespace details {
+
+// TODO(b/69122224): remove this type and usages of it
+// DO NOT ADD USAGES
+template <typename T>
+class DoNotDestruct {
+  public:
+    DoNotDestruct() { new (buffer) T(); }
+    T& get() { return *reinterpret_cast<T*>(buffer); }
+    T* operator->() { return reinterpret_cast<T*>(buffer); }
+
+  private:
+    alignas(T) char buffer[sizeof(T)];
+};
+
+}  // namespace details
+
 }  // namespace hardware
 }  // namespace android
 
