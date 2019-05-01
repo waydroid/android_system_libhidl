@@ -367,7 +367,7 @@ struct hidl_vec {
             details::logAlwaysFatal("size can't be negative.");
         }
         mSize = static_cast<uint32_t>(size);
-        mBuffer = new T[mSize];
+        mBuffer = new T[mSize]();
         mOwnsBuffer = true;
 
         size_t idx = 0;
@@ -453,7 +453,7 @@ struct hidl_vec {
             delete[] mBuffer;
         }
         mSize = static_cast<uint32_t>(list.size());
-        mBuffer = new T[mSize];
+        mBuffer = new T[mSize]();
         mOwnsBuffer = true;
 
         size_t idx = 0;
@@ -507,7 +507,7 @@ struct hidl_vec {
         if (size > UINT32_MAX) {
             details::logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
         }
-        T *newBuffer = new T[size];
+        T* newBuffer = new T[size]();
 
         for (size_t i = 0; i < std::min(static_cast<uint32_t>(size), mSize); ++i) {
             newBuffer[i] = mBuffer[i];
@@ -583,7 +583,7 @@ private:
         mSize = static_cast<uint32_t>(size);
         mOwnsBuffer = true;
         if (mSize > 0) {
-            mBuffer = new T[size];
+            mBuffer = new T[size]();
             for (size_t i = 0; i < size; ++i) {
                 mBuffer[i] = data[i];
             }
