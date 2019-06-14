@@ -46,3 +46,36 @@ cc_test {
         "-g",
     ],
 }
+
+cc_library {
+    name: "libhidlbase",
+    recovery_available: true,
+    vendor_available: true,
+    vndk: {
+        enabled: true,
+        support_system_process: true,
+    },
+
+    defaults: [
+        "libhidlbase-impl-shared-libs",
+        "libhidltransport-impl-shared-libs",
+    ],
+
+    whole_static_libs: [
+        "libhidlbase-impl-internal",
+        "libhidltransport-impl-internal",
+    ],
+}
+
+// WARNING: deprecated
+// This library is no longer required, and dependencies should be taken
+// on libhidlbase instead.
+cc_library {
+    name: "libhidltransport",
+    recovery_available: true,
+    vendor_available: true,
+    vndk: {
+        enabled: true,
+        support_system_process: true,
+    },
+}
