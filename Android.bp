@@ -47,16 +47,11 @@ cc_test {
     ],
 }
 
-cc_library {
-    name: "libhidlbase",
-    recovery_available: true,
-    vendor_available: true,
-    vndk: {
-        enabled: true,
-        support_system_process: true,
-    },
+cc_defaults {
+    name: "libhidlbase-combined-impl",
 
     defaults: [
+        "libhwbinder-impl-shared-libs",
         "libhidlbase-impl-shared-libs",
         "libhidltransport-impl-shared-libs",
     ],
@@ -64,6 +59,35 @@ cc_library {
     whole_static_libs: [
         "libhidlbase-impl-internal",
         "libhidltransport-impl-internal",
+    ],
+}
+
+cc_library {
+    name: "libhidlbase",
+    defaults: ["libhidlbase-combined-impl"],
+    recovery_available: true,
+    vendor_available: true,
+    vndk: {
+        enabled: true,
+        support_system_process: true,
+    },
+    whole_static_libs: [
+        "libhwbinder-impl-internal",
+    ],
+}
+
+// Only libhwbinder_benchmark needs to have pgo enabled. When all places
+// support having PGO selectively enabled, all places can use libhwbinder.
+//
+// http://b/77320844
+cc_library {
+    name: "libhidlbase_pgo",
+    defaults: [
+        "libhidlbase-combined-impl",
+        "hwbinder_benchmark_pgo",
+    ],
+    whole_static_libs: [
+        "libhwbinder_pgo-impl-internal",
     ],
 }
 
