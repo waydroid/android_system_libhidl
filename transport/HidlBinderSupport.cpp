@@ -264,12 +264,24 @@ sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr
     return sBnObj;
 }
 
+bool doesSupportHostBinder() {
+    return (access("/dev/host_hwbinder", F_OK|R_OK|W_OK) == 0);
+}
+
 static bool gThreadPoolConfigured = false;
 
 void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
     status_t ret = ProcessState::self()->setThreadPoolConfiguration(
         maxThreads, callerWillJoin /*callerJoinsPool*/);
     LOG_ALWAYS_FATAL_IF(ret != OK, "Could not setThreadPoolConfiguration: %d", ret);
+
+    if (doesSupportHostBinder()){
+        ProcessState::switchToHostBinder(!ProcessState::isHostBinder());
+        status_t ret = ProcessState::self()->setThreadPoolConfiguration(
+            maxThreads, callerWillJoin /*callerJoinsPool*/);
+        ProcessState::switchToHostBinder(!ProcessState::isHostBinder());
+        LOG_ALWAYS_FATAL_IF(ret != OK, "Could not setThreadPoolConfiguration for Host: %d", ret);
+    }
 
     gThreadPoolConfigured = true;
 }
@@ -278,6 +290,11 @@ void joinBinderRpcThreadpool() {
     LOG_ALWAYS_FATAL_IF(!gThreadPoolConfigured,
                         "HIDL joinRpcThreadpool without calling configureRpcThreadPool.");
     IPCThreadState::self()->joinThreadPool();
+    if (doesSupportHostBinder()){
+        ProcessState::switchToHostBinder(!ProcessState::isHostBinder());
+        IPCThreadState::self()->joinThreadPool();
+        ProcessState::switchToHostBinder(!ProcessState::isHostBinder());
+    }
 }
 
 int setupBinderPolling() {
