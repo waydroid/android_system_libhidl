@@ -238,45 +238,6 @@ sp<IServiceManager1_2> defaultServiceManager1_2() {
     return gDefaultServiceManager;
 }
 
-sp<IServiceManager1_0> hostServiceManager() {
-    return hostServiceManager1_2();
-}
-sp<IServiceManager1_1> hostServiceManager1_1() {
-    return hostServiceManager1_2();
-}
-sp<IServiceManager1_2> hostServiceManager1_2() {
-    using android::hidl::manager::V1_2::BnHwServiceManager;
-    using android::hidl::manager::V1_2::BpHwServiceManager;
-
-    static std::mutex gHostServiceManagerLock;
-    static sp<IServiceManager1_2> gHostServiceManager;
-
-    {
-        std::lock_guard<std::mutex> _l(gHostServiceManagerLock);
-        if (gHostServiceManager != nullptr) {
-            return gHostServiceManager;
-        }
-
-        if (access("/dev/host_hwbinder", F_OK|R_OK|W_OK) != 0) {
-            // host_hwbinder not available on this device or not accessible to
-            // this process.
-            return nullptr;
-        }
-
-        while (gHostServiceManager == nullptr) {
-            gHostServiceManager =
-                fromBinder<IServiceManager1_2, BpHwServiceManager, BnHwServiceManager>(
-                    ProcessState::initWithDriver("/dev/host_hwbinder")->getContextObject(nullptr));
-            if (gHostServiceManager == nullptr) {
-                LOG(ERROR) << "host hwservicemanager should be online, but got nullptr.";
-                sleep(1);
-            }
-        }
-    }
-
-    return gHostServiceManager;
-}
-
 static std::vector<std::string> findFiles(const std::string& path, const std::string& prefix,
                                           const std::string& suffix) {
     std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(path.c_str()), closedir);
@@ -769,9 +730,7 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
     using ::android::hidl::manager::V1_0::IServiceManager;
     sp<Waiter> waiter;
 
-    sp<IServiceManager1_1> sm, hsm;
-    Return<sp<IBase>> ret = nullptr;
-    bool isHosthal = false;
+    sp<IServiceManager1_1> sm;
     Transport transport = Transport::EMPTY;
     if (kIsRecovery) {
         transport = Transport::PASSTHROUGH;
@@ -789,18 +748,6 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
                   transportRet.description().c_str());
             return nullptr;
         }
-        hsm = hostServiceManager1_1();
-
-        if (hsm != nullptr && transportRet == Transport::EMPTY) {
-            transportRet = hsm->getTransport(descriptor, instance);
-            if (!transportRet.isOk()) {
-                ALOGE("getService: hostServiceManager()->getTransport returns %s",
-                      transportRet.description().c_str());
-                return nullptr;
-            }
-            isHosthal = true;
-        }
-
         transport = transportRet;
     }
 
@@ -826,18 +773,12 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
 
     for (int tries = 0; !getStub && (vintfHwbinder || vintfLegacy); tries++) {
         if (waiter == nullptr && tries > 0) {
-            if (isHosthal)
-                waiter = new Waiter(descriptor, instance, hsm);
-            else
-                waiter = new Waiter(descriptor, instance, sm);
+            waiter = new Waiter(descriptor, instance, sm);
         }
         if (waiter != nullptr) {
             waiter->reset();  // don't reorder this -- see comments on reset()
         }
-        if (isHosthal)
-            ret = hsm->get(descriptor, instance);
-        else
-            ret = sm->get(descriptor, instance);
+        Return<sp<IBase>> ret = sm->get(descriptor, instance);
         if (!ret.isOk()) {
             ALOGE("getService: defaultServiceManager()->get returns %s for %s/%s.",
                   ret.description().c_str(), descriptor.c_str(), instance.c_str());
