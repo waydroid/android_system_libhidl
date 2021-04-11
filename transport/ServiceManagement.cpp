@@ -370,7 +370,8 @@ struct PassthroughServiceManager : IServiceManager1_1 {
         static std::string halLibPathVndkSp = android::base::StringPrintf(
             HAL_LIBRARY_PATH_VNDK_SP_FOR_VERSION, details::getVndkVersionStr().c_str());
         std::vector<std::string> paths = {
-            HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, halLibPathVndkSp,
+            HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR,
+            HAL_LIBRARY_PATH_VENDOR_EXTRA, halLibPathVndkSp,
 #ifndef __ANDROID_VNDK__
             HAL_LIBRARY_PATH_SYSTEM,
 #endif
