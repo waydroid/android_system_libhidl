@@ -276,10 +276,8 @@ void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
     LOG_ALWAYS_FATAL_IF(ret != OK, "Could not setThreadPoolConfiguration: %d", ret);
 
     if (doesSupportHostBinder()){
-        ProcessState::switchToHostBinder(!ProcessState::isHostBinder());
-        status_t ret = ProcessState::self()->setThreadPoolConfiguration(
+        status_t ret = ProcessState::self(true)->setThreadPoolConfiguration(
             maxThreads, callerWillJoin /*callerJoinsPool*/);
-        ProcessState::switchToHostBinder(!ProcessState::isHostBinder());
         LOG_ALWAYS_FATAL_IF(ret != OK, "Could not setThreadPoolConfiguration for Host: %d", ret);
     }
 
@@ -291,9 +289,7 @@ void joinBinderRpcThreadpool() {
                         "HIDL joinRpcThreadpool without calling configureRpcThreadPool.");
     IPCThreadState::self()->joinThreadPool();
     if (doesSupportHostBinder()){
-        ProcessState::switchToHostBinder(!ProcessState::isHostBinder());
-        IPCThreadState::self()->joinThreadPool();
-        ProcessState::switchToHostBinder(!ProcessState::isHostBinder());
+        IPCThreadState::selfForHost()->joinThreadPool();
     }
 }
 
