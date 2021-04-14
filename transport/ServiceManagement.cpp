@@ -212,11 +212,13 @@ sp<IServiceManager1_2> defaultServiceManager1_2(bool useHostHwBinder) {
 
     {
         std::lock_guard<std::mutex> _l(gDefaultServiceManagerLock);
-        if (gDefaultServiceManager != nullptr) {
-            return gDefaultServiceManager;
-        }
+        gDefaultServiceManager = nullptr;
+            //if (gDefaultServiceManager != nullptr) {
+            //    return gDefaultServiceManager;
+            //}
 
-        if (access(useHostHwBinder ? "/dev/host_hwbinder" : "/dev/hwbinder", F_OK|R_OK|W_OK) != 0) {
+            if (access(useHostHwBinder ? "/dev/host_hwbinder" : "/dev/hwbinder", F_OK | R_OK | W_OK) != 0)
+        {
             // HwBinder not available on this device or not accessible to
             // this process.
             return nullptr;
