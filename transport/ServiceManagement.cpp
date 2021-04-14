@@ -216,13 +216,14 @@ sp<IServiceManager1_2> defaultServiceManager1_2(bool useHostHwBinder) {
             return gDefaultServiceManager;
         }
 
-        if (access("/dev/hwbinder", F_OK|R_OK|W_OK) != 0) {
+        if (access(useHostHwBinder ? "/dev/host_hwbinder" : "/dev/hwbinder", F_OK|R_OK|W_OK) != 0) {
             // HwBinder not available on this device or not accessible to
             // this process.
             return nullptr;
         }
 
-        waitForHwServiceManager();
+        if (!useHostHwBinder)
+            waitForHwServiceManager();
 
         while (gDefaultServiceManager == nullptr) {
             gDefaultServiceManager =
