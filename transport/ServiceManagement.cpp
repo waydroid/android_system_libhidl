@@ -197,6 +197,16 @@ void onRegistration(const std::string& packageName, const std::string& interface
 
 }  // details
 
+sp<IServiceManager1_0> defaultServiceManager() {
+    return defaultServiceManager1_2(false);
+}
+sp<IServiceManager1_1> defaultServiceManager1_1() {
+    return defaultServiceManager1_2(false);
+}
+sp<IServiceManager1_2> defaultServiceManager1_2() {
+    return defaultServiceManager1_2(false);
+}
+
 sp<IServiceManager1_0> defaultServiceManager(bool useHostHwBinder) {
     return defaultServiceManager1_2(useHostHwBinder);
 }

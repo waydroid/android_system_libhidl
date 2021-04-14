@@ -64,9 +64,12 @@ status_t registerAsServiceInternal(const sp<::android::hidl::base::V1_0::IBase>&
 
 // These functions are for internal use by hidl. If you want to get ahold
 // of an interface, the best way to do this is by calling IFoo::getService()
-sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager(bool useHostHwBinder=false);
-sp<::android::hidl::manager::V1_1::IServiceManager> defaultServiceManager1_1(bool useHostHwBinder=false);
-sp<::android::hidl::manager::V1_2::IServiceManager> defaultServiceManager1_2(bool useHostHwBinder=false);
+sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
+sp<::android::hidl::manager::V1_1::IServiceManager> defaultServiceManager1_1();
+sp<::android::hidl::manager::V1_2::IServiceManager> defaultServiceManager1_2();
+sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager(bool useHostHwBinder);
+sp<::android::hidl::manager::V1_1::IServiceManager> defaultServiceManager1_1(bool useHostHwBinder);
+sp<::android::hidl::manager::V1_2::IServiceManager> defaultServiceManager1_2(bool useHostHwBinder);
 sp<::android::hidl::manager::V1_0::IServiceManager> getPassthroughServiceManager();
 sp<::android::hidl::manager::V1_1::IServiceManager> getPassthroughServiceManager1_1();
 
