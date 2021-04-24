@@ -594,7 +594,8 @@ struct Waiter : IServiceNotification {
         // that thread, it will block forever because we hung up the one and only
         // binder thread on a condition variable that can only be notified by an
         // incoming binder call.
-        if (IPCThreadState::self()->isOnlyBinderThread()) {
+        const bool useHostHwBinder = false;
+        if (IPCThreadState::self(useHostHwBinder)->isOnlyBinderThread()) {
             LOG(WARNING) << "Can't efficiently wait for " << mInterfaceName << "/"
                          << mInstanceName << ", because we are called from "
                          << "the only binder thread in this process.";
@@ -765,7 +766,7 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
         if (doesSupportHostBinder())
         {
             if (transportRet == Transport::EMPTY) {
-                sm = defaultServiceManager1_1(/*useHostBinder*/true);
+                sm = defaultServiceManager1_1(/*useHostHwBinder*/true);
                 if (sm == nullptr) {
                     ALOGE("getService: defaultServiceManager() of host is null");
                     return nullptr;

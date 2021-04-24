@@ -271,12 +271,14 @@ bool doesSupportHostBinder() {
 static bool gThreadPoolConfigured = false;
 
 void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
-    status_t ret = ProcessState::self()->setThreadPoolConfiguration(
+    bool useHostHwBinder = false;
+    status_t ret = ProcessState::self(useHostHwBinder)->setThreadPoolConfiguration(
         maxThreads, callerWillJoin /*callerJoinsPool*/);
     LOG_ALWAYS_FATAL_IF(ret != OK, "Could not setThreadPoolConfiguration: %d", ret);
 
     if (doesSupportHostBinder()){
-        status_t ret = ProcessState::self(true)->setThreadPoolConfiguration(
+        useHostHwBinder = true;
+        status_t ret = ProcessState::self(useHostHwBinder)->setThreadPoolConfiguration(
             maxThreads, callerWillJoin /*callerJoinsPool*/);
         LOG_ALWAYS_FATAL_IF(ret != OK, "Could not setThreadPoolConfiguration for Host: %d", ret);
     }
@@ -287,15 +289,16 @@ void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
 void joinBinderRpcThreadpool() {
     LOG_ALWAYS_FATAL_IF(!gThreadPoolConfigured,
                         "HIDL joinRpcThreadpool without calling configureRpcThreadPool.");
-    IPCThreadState::self()->joinThreadPool();
+    IPCThreadState::self(false)->joinThreadPool();
     if (doesSupportHostBinder()){
-        IPCThreadState::selfForHost()->joinThreadPool();
+        IPCThreadState::self(true)->joinThreadPool();
     }
 }
 
 int setupBinderPolling() {
     int fd;
-    int err = IPCThreadState::self()->setupPolling(&fd);
+    const bool useHostHwBinder = false;
+    int err = IPCThreadState::self(useHostHwBinder)->setupPolling(&fd);
 
     LOG_ALWAYS_FATAL_IF(err != OK, "Failed to setup binder polling: %d (%s)", err, strerror(err));
 
@@ -303,11 +306,13 @@ int setupBinderPolling() {
 }
 
 status_t handleBinderPoll() {
-    return IPCThreadState::self()->handlePolledCommands();
+    const bool useHostHwBinder = false;
+    return IPCThreadState::self(useHostHwBinder)->handlePolledCommands();
 }
 
 void addPostCommandTask(const std::function<void(void)> task) {
-    IPCThreadState::self()->addPostCommandTask(task);
+    const bool useHostHwBinder = false;
+    IPCThreadState::self(useHostHwBinder)->addPostCommandTask(task);
 }
 
 }  // namespace hardware
