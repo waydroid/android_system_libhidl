@@ -26,6 +26,7 @@ cc_defaults {
         "libcutils",
         "libvndksupport"
     ],
+    static_libs: [ "libtinyxml2" ],
     export_shared_lib_headers: [
         "libutils",
     ],
